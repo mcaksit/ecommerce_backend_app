@@ -12,3 +12,15 @@ class Customer(models.Model):
 
     def __str__(self):
         return self.name
+
+class Product(models.Model):
+    name = models.CharField(max_length=100)
+    image = models.CharField(max_length=200)
+    category = models.CharField(max_length=50)
+    stock = models.CharField(max_length=20)
+    price = models.CharField(max_length=20)
+    score = models.CharField(max_length=5)
+    click_count = models.CharField(max_length=30)
+
+    def __str__(self):
+        return self.name
