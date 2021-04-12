@@ -2,17 +2,17 @@ from django.shortcuts import render
 from django.http import JsonResponse
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from .serializers import CustomerSerializer
-from .models import Customer
+from .serializers import CustomerSerializer,ProductSerializer
+from .models import Customer,Product
 
 @api_view(['GET'])
 def apiOverview(request):
     api_urls = {
-        'List':'/customer-list/',
-        'Detail':'/customer-detail/<str:pk>/',
-        'Create':'/customer-create/',
-        'Update':'/customer-update/<str:pk>/',
-        'Delete':'/customer-delete/<str:pk>/',
+        'List':'/customer-list/, /product-list/',
+        'Detail':'/customer-detail/<str:pk>/, /product-detail/<str:pk>/',
+        'Create':'/customer-create/, /product-create/',
+        'Update':'/customer-update/<str:pk>/, /product-update/<str:pk>/',
+        'Delete':'/customer-delete/<str:pk>/, /product-delete/<str:pk>/',
     }
     return Response(api_urls)
 
@@ -53,3 +53,20 @@ def CustomerDelete(request, pk):
     customer.delete()
 
     return Response('Customer Deleted Successfully!')
+
+#Product APIs
+@api_view(['GET'])
+def ProductList(request):    
+    products = Product.objects.all()
+    serializer = ProductSerializer(products, many=True)
+    return Response(serializer.data)
+
+@api_view(['GET'])
+def ProductDetail(request, pk):
+    try:
+        products = Product.objects.get(id=pk)
+    except Product.DoesNotExist:
+        return Response("0")
+        
+    serializer = ProductSerializer(products, many=True)
+    return Response(serializer.data)
