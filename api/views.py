@@ -66,7 +66,43 @@ def ProductDetail(request, pk):
     try:
         products = Product.objects.get(id=pk)
     except Product.DoesNotExist:
-        return Response("0")
-        
+        return Response(f"No product exists with id: {pk}")
+
     serializer = ProductSerializer(products, many=True)
     return Response(serializer.data)
+
+
+@api_view(['POST'])
+def ProductCreate(request):
+    serializer = ProductSerializer(data=request.data)
+
+    if serializer.is_valid():
+        serializer.save()
+
+    return Response(serializer.data)
+
+@api_view(['POST'])
+def ProductUpdate(request, pk):
+    try:
+        product = Product.objects.get(id=pk)
+    except Product.DoesNotExist:
+        return Response(f"No product exists with id: {pk}")
+
+    serializer = ProductSerializer(instance=product, data=request.data)
+
+    if serializer.is_valid():
+        serializer.save()
+
+    return Response(serializer.data)   
+
+
+@api_view(['DELETE'])
+def ProductDelete(request, pk):
+    try:
+        product = Product.objects.get(id=pk)
+    except Product.DoesNotExist:
+        return Response(f"No product exists with id: {pk}")
+    
+    product.delete()
+
+    return Response('Product Deleted Successfully!')     
