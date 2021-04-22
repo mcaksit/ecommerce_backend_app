@@ -21,6 +21,7 @@ class Product(models.Model):
     price = models.CharField(max_length=20)
     score = models.CharField(max_length=5)
     click_count = models.CharField(max_length=30)
+    description = models.CharField(max_length=500)
 
     def __str__(self):
         return self.name
