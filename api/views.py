@@ -23,14 +23,20 @@ def apiOverview(request):
 def CustomerList(request):
     customers = Customer.objects.all()
     serializer = CustomerSerializer(customers, many=True)
-    return Response(serializer.data)
+    return Response(serializer.data, status=status.HTTP_200_OK)
 
 @api_view(['GET'])
 def CustomerDetail(request, pk):
-    customers = Customer.objects.get(id=pk)
-    serializer = CustomerSerializer(customers, many=False)
-    return Response(serializer.data)
+    try:
+        customer = Customer.objects.get(id=pk)
+    except Customer.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
 
+    #Get Customer detail
+    serializer = CustomerSerializer(customer)
+    return Response(serializer.data, status=status.HTTP_200_OK)
+       
+#Create customer
 @api_view(['POST'])
 def CustomerCreate(request):
     serializer = CustomerSerializer(data=request.data)
@@ -40,22 +46,31 @@ def CustomerCreate(request):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+#Update a customer
 @api_view(['POST'])
 def CustomerUpdate(request, pk):
+    try:
+        customer = Customer.objects.get(id=pk)
+    except Customer.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
     customer = Customer.objects.get(id=pk)
     serializer = CustomerSerializer(instance=customer, data=request.data)
 
     if serializer.is_valid():
         serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    return Response(serializer.data)
-
+#Delete a customer
 @api_view(['DELETE'])
 def CustomerDelete(request, pk):
-    customer = Customer.objects.get(id=pk)
-    customer.delete()
-
-    return Response('Customer Deleted Successfully!')
+    try:
+        customer = Customer.objects.get(id=pk)
+    except Customer.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+   
+    customer.delete()    
+    return Response(status=status.HTTP_204_NO_CONTENT)
 
 #Product APIs
 @api_view(['GET'])
@@ -67,12 +82,12 @@ def ProductList(request):
 @api_view(['GET'])
 def ProductDetail(request, pk):
     try:
-        products = Product.objects.get(id=pk)
+        product = Product.objects.get(id=pk)
     except Product.DoesNotExist:
-        return Response(f"No product exists with id: {pk}")
+        return Response(status=status.HTTP_404_NOT_FOUND)
 
-    serializer = ProductSerializer(products, many=False)
-    return Response(serializer.data)
+    serializer = ProductSerializer(product)
+    return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 @api_view(['POST'])
@@ -81,22 +96,23 @@ def ProductCreate(request):
 
     if serializer.is_valid():
         serializer.save()
+        return Response(status=status.HTTP_201_CREATED)
+    return Response(serializer.data, status=status.HTTP_400_BAD_REQUEST)
 
-    return Response(serializer.data)
 
 @api_view(['POST'])
 def ProductUpdate(request, pk):
     try:
         product = Product.objects.get(id=pk)
     except Product.DoesNotExist:
-        return Response(f"No product exists with id: {pk}")
+        return Response(status=status.HTTP_404_NOT_FOUND)
 
     serializer = ProductSerializer(instance=product, data=request.data)
 
     if serializer.is_valid():
         serializer.save()
-
-    return Response(serializer.data)   
+        return Response(status=status.HTTP_201_CREATED)
+    return Response(serializer.data, status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(['DELETE'])
@@ -104,8 +120,7 @@ def ProductDelete(request, pk):
     try:
         product = Product.objects.get(id=pk)
     except Product.DoesNotExist:
-        return Response(f"No product exists with id: {pk}")
+        return Response(status=status.HTTP_404_NOT_FOUND)
     
     product.delete()
-
-    return Response('Product Deleted Successfully!')     
+    return Response(status=status.HTTP_204_NO_CONTENT)
