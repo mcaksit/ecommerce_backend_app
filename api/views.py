@@ -1,8 +1,10 @@
 from django.http import JsonResponse
 from django.shortcuts import render
 from rest_framework import status
+from rest_framework.generics import ListAPIView
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
+from rest_framework.filters import SearchFilter, OrderingFilter
 
 from .models import Customer, Product
 from .serializers import CustomerSerializer, ProductSerializer
@@ -11,6 +13,7 @@ from .serializers import CustomerSerializer, ProductSerializer
 @api_view(['GET'])
 def apiOverview(request):
     api_urls = {
+        'Search':'/product/?search=<param>',
         'List':'/customer-list/, /product-list/',
         'Detail':'/customer-detail/<str:pk>/, /product-detail/<str:pk>/',
         'Create':'/customer-create/, /product-create/',
@@ -73,6 +76,17 @@ def CustomerDelete(request, pk):
     return Response(status=status.HTTP_204_NO_CONTENT)
 
 #Product APIs
+@api_view(['GET'])
+def ProductSearch(request, param):
+    try:
+        product = Product.objects.get(name=param)
+    except Product.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
+    serializer = ProductSerializer(product)
+    return Response(serializer.data, status=status.HTTP_200_OK)
+
+        
 @api_view(['GET'])
 def ProductList(request):    
     products = Product.objects.all()

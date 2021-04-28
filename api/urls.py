@@ -10,6 +10,7 @@ urlpatterns = [
     path('customer-update/<str:pk>/', views.CustomerUpdate, name='customer-update'),
     path('customer-delete/<str:pk>/', views.CustomerDelete, name='customer-delete'),
     #Product api urls
+    path('search/<str:param>/',views.ProductSearch, name='product-search'),
     path('product-list/', views.ProductList, name='product-list'),
     path('product-detail/<str:pk>/', views.ProductDetail, name='product-detail'),
     path('product-create/', views.ProductCreate, name='product-create'),
