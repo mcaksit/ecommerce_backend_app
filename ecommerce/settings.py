@@ -35,18 +35,18 @@ ALLOWED_HOSTS = ['cs308ecommerceapp.herokuapp.com']
 
 
 """
-#CORS_ALLOWED_ORIGINS = [
-#    "http://localhost:4200"
-#]
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:4200"
+]
 
-#CORS_ALLOW_METHODS = [
+CORS_ALLOW_METHODS = [
     'DELETE',
     'GET',
     'OPTIONS',
     'PATCH',
     'POST',
     'PUT',
-#]
+]
 """
 
 
