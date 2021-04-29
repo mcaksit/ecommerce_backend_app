@@ -26,18 +26,21 @@ class CustomerTestCase(APITestCase):
         self.valid_customer = {
             "name":"testname",
             "surname":"testsurname",
+            "password":"1234",
             "phone":"111111",
             "email":"testemail@localhost.app"
         }
         self.invalid_customer = {
             "name":"",
             "surname":"",
+            "password":"",
             "phone":"111111",
             "email":"testemail@localhost.app"
         }
         self.valid_customer_update = {
             "name":"testname(updated)",
             "surname":"testsurname",
+            "password":"nani",
             "phone":"111111",
             "email":"testemail@localhost.app"
         }
