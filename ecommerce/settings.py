@@ -34,9 +34,11 @@ DEBUG = (os.environ.get('DEBUG_VALUE') == 'True')
 ALLOWED_HOSTS = ['cs308ecommerceapp.herokuapp.com']
 
 
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:4200"
-]
+# CORS_ALLOWED_ORIGINS = [
+#     "http://localhost:4200",
+#     "http://localhost:4200/home",
+#     "http://localhost:4200/detail",
+# ]
 
 CORS_ORIGIN_ALLOW_ALL = True
 
