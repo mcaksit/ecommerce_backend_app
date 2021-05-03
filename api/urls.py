@@ -4,11 +4,11 @@ from . import views
 urlpatterns = [
     path('', views.apiOverview, name='api-overview'),
     #User api urls
-    path('customer-list/', views.CustomerList, name='customer-list'),
-    path('customer-detail/<str:pk>/', views.CustomerDetail, name='customer-detail'),
-    path('customer-create/', views.CustomerCreate, name='customer-create'),
-    path('customer-update/<str:pk>/', views.CustomerUpdate, name='customer-update'),
-    path('customer-delete/<str:pk>/', views.CustomerDelete, name='customer-delete'),
+    path('user-list/', views.UserList, name='user-list'),
+    path('user-detail/<str:pk>/', views.UserDetail, name='user-detail'),
+    path('user-create/', views.UserCreate, name='user-create'),
+    path('user-update/<str:pk>/', views.UserUpdate, name='user-update'),
+    path('user-delete/<str:pk>/', views.UserDelete, name='user-delete'),
     #Product api urls
     path('search/<str:param>/',views.ProductSearch, name='product-search'),
     path('product-list/', views.ProductList, name='product-list'),
