@@ -34,13 +34,15 @@ DEBUG = (os.environ.get('DEBUG_VALUE') == 'True')
 ALLOWED_HOSTS = ['cs308ecommerceapp.herokuapp.com']
 
 
+
 # CORS_ALLOWED_ORIGINS = [
+#     "http://localhost",
 #     "http://localhost:4200",
-#     "http://localhost:4200/home",
-#     "http://localhost:4200/detail",
 # ]
 
 CORS_ORIGIN_ALLOW_ALL = True
+
+CORS_ALLOW_CREDENTIALS = True
 
 CORS_ALLOW_METHODS = [
     'DELETE',
@@ -50,6 +52,7 @@ CORS_ALLOW_METHODS = [
     'POST',
     'PUT',
 ]
+
 
 
 # Application definition
@@ -76,7 +79,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 
-    'corsheaders.middleware.CorsMiddleware',
+    'corsheaders.middleware.CorsMiddleware', 
 ]
 
 ROOT_URLCONF = 'ecommerce.urls'
