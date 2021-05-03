@@ -11,7 +11,7 @@ ROLE_CHOICES = (
 CATEGORY_CHOICES = (
     'Smartphone',
     'Computer',
-    'TV,
+    'TV',
     'Tablet',
 )
 
