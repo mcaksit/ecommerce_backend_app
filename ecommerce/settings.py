@@ -29,9 +29,9 @@ SECRET_KEY = '4cgmo21%n^w3ayl14^_@ntcf=sc07s^fw55(5_*k+4i^vb3(w%'
 #SECRET_KEY = os.environ.get('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = (os.environ.get('DEBUG_VALUE') == 'True')
+DEBUG = (os.environ.get('DEBUG_VALUE') == 'False')
 
-ALLOWED_HOSTS = ['cs308ecommerceapp.herokuapp.com']
+ALLOWED_HOSTS = ['*']
 
 # CORS_ALLOWED_ORIGINS = [
 #     "http://localhost",
