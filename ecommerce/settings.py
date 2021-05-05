@@ -29,26 +29,13 @@ SECRET_KEY = '4cgmo21%n^w3ayl14^_@ntcf=sc07s^fw55(5_*k+4i^vb3(w%'
 #SECRET_KEY = os.environ.get('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = (os.environ.get('DEBUG_VALUE') == 'True')
-
+DEBUG = (os.environ.get('DEBUG_VALUE') == 'False')
+#DEBUG = True
 #ALLOWED_HOSTS = ['cs308ecommerceapp.herokuapp.com']
 ALLOWED_HOSTS=['*']
 CORS_ORIGIN_ALLOW_ALL = True
 CORS_ALLOW_CREDENTIALS = True
-"""
-#CORS_ALLOWED_ORIGINS = [
-#    "http://localhost:4200"
-#]
 
-#CORS_ALLOW_METHODS = [
-    'DELETE',
-    'GET',
-    'OPTIONS',
-    'PATCH',
-    'POST',
-    'PUT',
-#]
-"""
 
 
 # Application definition
@@ -62,20 +49,19 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'api.apps.ApiConfig',
-
-    #'corsheaders',
+    'corsheaders'
 ]
 
 MIDDLEWARE = [
-    'django.middleware.security.SecurityMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
+    'django.middleware.security.SecurityMiddleware',
+    'django.contrib.sessions.middleware.SessionMiddleware',    
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
-
-    #'corsheaders.middleware.CorsMiddleware',
+    'django.middleware.clickjacking.XFrameOptionsMiddleware'
+    
 ]
 
 ROOT_URLCONF = 'ecommerce.urls'
