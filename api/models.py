@@ -3,16 +3,28 @@ from django.utils import timezone
 
 # Create your models here.
 
-class Customer(models.Model):
-    name = models.CharField(max_length=100)
-    surname = models.CharField(max_length=100)
+ROLE_CHOICES = (
+    'Standard',
+    'Admin',
+)
+
+CATEGORY_CHOICES = (
+    'Smartphone',
+    'Computer',
+    'TV',
+    'Tablet',
+)
+
+class User(models.Model):
+    role = models.CharField(max_length=100)
+    username = models.CharField(max_length=150)
     password = models.CharField(max_length=100)
     phone = models.CharField(max_length=100)
     email = models.CharField(max_length=200)
     date_created = models.DateTimeField(default=timezone.now)
     
     def __str__(self):
-        return self.name
+        return self.username
 
 class Product(models.Model):
     name = models.CharField(max_length=100)

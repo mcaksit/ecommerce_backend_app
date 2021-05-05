@@ -7,8 +7,8 @@ from rest_framework import status
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APITestCase
 
-from ..models import Customer, Product
-from ..serializers import CustomerSerializer, ProductSerializer
+from ..models import User, Product
+from ..serializers import UserSerializer, ProductSerializer
 
 
 #Models testing

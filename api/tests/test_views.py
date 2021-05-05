@@ -7,127 +7,135 @@ from rest_framework import status
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APITestCase
 
-from ..models import Customer, Product
-from ..serializers import CustomerSerializer, ProductSerializer
+from ..models import User, Product
+from ..serializers import UserSerializer, ProductSerializer
 
 
 #Initialize client
 client = Client()
-"""Test For Customer Views"""
-class CustomerTestCase(APITestCase):
+"""Test For User Views"""
+class UserTestCase(APITestCase):
 
     def setUp(self):
-        self.staticCustomer = Customer.objects.create(
+        self.staticUser = User.objects.create(
             name="staticname",surname="staticsurname",phone="1234",email="static@test.com"
         )
-        Customer.objects.create(
+        User.objects.create(
             name="person",surname="persurname",phone="12324",email="stpersonc@test.com"
         )
-        self.valid_customer = {
-            "name":"testname",
-            "surname":"testsurname",
+        self.valid_user = {
+            "role" : "standard",
+            "username":"testsurname",
             "password":"1234",
             "phone":"111111",
             "email":"testemail@localhost.app"
         }
-        self.invalid_customer = {
-            "name":"",
-            "surname":"",
+
+        role = models.CharField(max_length=100)
+    username = models.CharField(max_length=150)
+    password = models.CharField(max_length=100)
+    phone = models.CharField(max_length=100)
+    email = models.CharField(max_length=200)
+    date_created = models.DateTimeField(default=timezone.now)
+
+        self.invalid_user = {
+            "role" : "standard",
+            "username":"",
             "password":"",
             "phone":"111111",
             "email":"testemail@localhost.app"
         }
-        self.valid_customer_update = {
-            "name":"testname(updated)",
-            "surname":"testsurname",
+        self.valid_user_update = {
+            "role" : "standard",
+            "username":"testname(updated)",
             "password":"nani",
             "phone":"111111",
             "email":"testemail@localhost.app"
         }
-        self.invalid_customer_update = {
+        self.invalid_user_update = {
             "name":"",
             "surname":"",
             "phone":"",
             "email":""
         }
-    #Test get all Customers' details
-    def test_get_all_customer(self):
-        response = self.client.get(reverse("customer-list"))
-        customers = Customer.objects.all()
-        serializer = CustomerSerializer(customers, many=True)
+    #Test get all Users' details
+    def test_get_all_user(self):
+        response = self.client.get(reverse("user-list"))
+        users = User.objects.all()
+        serializer = UserSerializer(users, many=True)
         self.assertEqual(response.data, serializer.data)
         self.assertEqual(response.status_code, status.HTTP_200_OK)        
 
-    #Test valid Customer's detail 
-    def test_get_valid_customer(self):
+    #Test valid User's detail 
+    def test_get_valid_user(self):
         response = self.client.get(
-            reverse("customer-detail", kwargs={'pk':self.staticCustomer.pk}))
-        customer = Customer.objects.get(pk=self.staticCustomer.pk)
-        serializer = CustomerSerializer(customer)
+            reverse("user-detail", kwargs={'pk':self.staticUser.pk}))
+        user = User.objects.get(pk=self.staticUser.pk)
+        serializer = UserSerializer(user)
 
         self.assertEqual(response.data,serializer.data)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-    #Test invalid Customer's detail
-    def test_get_invalid_customer(self):
+    #Test invalid User's detail
+    def test_get_invalid_user(self):
         response = self.client.get(
-            reverse("customer-detail", kwargs={'pk':100}))
+            reverse("user-detail", kwargs={'pk':100}))
         
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
-    #Test Customer create
-    def test_create_customer(self):
+    #Test User create
+    def test_create_user(self):
         response = self.client.post(
-            reverse("customer-create"), 
-            data=json.dumps(self.valid_customer),
+            reverse("user-create"), 
+            data=json.dumps(self.valid_user),
             content_type="application/json"
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
-    def test_create_invalid_customer(self):
+    def test_create_invalid_user(self):
         response = self.client.post(
-            reverse("customer-create"),
-            data=json.dumps(self.invalid_customer),
+            reverse("user-create"),
+            data=json.dumps(self.invalid_user),
             content_type="application/json"
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
     
-    #Test customer update
-    def test_update_customer(self):
+    #Test user update
+    def test_update_user(self):
         response = self.client.post(
-            reverse("customer-update", kwargs={'pk':self.staticCustomer.pk}),
-            data=json.dumps(self.valid_customer_update),
+            reverse("user-update", kwargs={'pk':self.staticUser.pk}),
+            data=json.dumps(self.valid_user_update),
             content_type="application/json"
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
     
     #Test invalid updates wrong id/empty data
-    def test_update_invalid_customer(self):    
+    def test_update_invalid_user(self):    
         response = self.client.post(
-            reverse("customer-update", kwargs={'pk':100}),
-            data=json.dumps(self.valid_customer_update),
+            reverse("user-update", kwargs={'pk':100}),
+            data=json.dumps(self.valid_user_update),
             content_type="application/json"
         )
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
-    def test_update_invalid_data_customer(self):    
+    def test_update_invalid_data_user(self):    
         response = self.client.post(
-            reverse("customer-update", kwargs={'pk':self.staticCustomer.pk}),
-            data=json.dumps(self.invalid_customer_update),
+            reverse("user-update", kwargs={'pk':self.staticUser.pk}),
+            data=json.dumps(self.invalid_user_update),
             content_type="application/json"
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-    #Test customer delete
-    def test_delete_customer(self):
+    #Test user delete
+    def test_delete_user(self):
         response = self.client.delete(
-            reverse("customer-delete", kwargs={'pk':self.staticCustomer.pk}))
+            reverse("user-delete", kwargs={'pk':self.staticUser.pk}))
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         
-    #Test invalid Customer delete
-    def test_delete_invalid_customer(self):
+    #Test invalid User delete
+    def test_delete_invalid_user(self):
         response = client.delete(
-            reverse("customer-delete", kwargs={'pk':100}))
+            reverse("user-delete", kwargs={'pk':100}))
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
 
