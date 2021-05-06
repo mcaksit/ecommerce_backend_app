@@ -19,6 +19,6 @@ urlpatterns = [
     path('product-delete/<int:pk>/', views.ProductDelete, name='product-delete'),
     #Product api urls (Alternative)
     path('list-products/', views.ProductsList.as_view()),
-    path('products/<slug:category_slug>/<slug:product_slug>/', views.ProductDetail.as_view()),
+    path('products/<slug:category_slug>/<slug:product_slug>/', views.ProductDetails.as_view()),
     path('products/<slug:category_slug>/', views.CategoryDetail.as_view()),
 ]

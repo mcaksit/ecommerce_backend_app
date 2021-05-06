@@ -171,7 +171,7 @@ class ProductsList(APIView):
         serializer = ProductSerializer(products, many=True)
         return Response(serializer.data)
 
-class ProductDetail(APIView):
+class ProductDetails(APIView):
     def get_object(self, category_slug, product_slug):
         try:
             return Product.objects.filter(category__slug=category_slug).get(slug=product_slug)
