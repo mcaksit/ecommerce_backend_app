@@ -77,8 +77,8 @@ class Order(models.Model):
 
 
 class ShippingAddress(models.Model):
-    #customer = models.ForeignKey(User, on_delete=models.CASCADE)
-    #order = models.ForeignKey(Order, on_delete=models.CASCADE)
+    customer = models.ForeignKey(User, on_delete=models.CASCADE)
+    order = models.ForeignKey(Order, on_delete=models.CASCADE)
     city = models.CharField(max_length=255, null=False)
     district = models.CharField(max_length=255, null=False)
     full_address = models.CharField(max_length=255, null=False)
