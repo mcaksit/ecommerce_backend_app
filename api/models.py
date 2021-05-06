@@ -65,8 +65,8 @@ class OrderItem(models.Model):
 
 
 class Order(models.Model):
-    #customer = models.ForeignKey(User, on_delete=models.CASCADE)
-    #items = models.ManyToManyField(OrderItem)
+    customer = models.ForeignKey(User, on_delete=models.CASCADE)
+    items = models.ManyToManyField(OrderItem)
     date_initialized = models.DateTimeField(default=timezone.now)
     date_ordered = models.DateTimeField(null=True)
     completed = models.BooleanField(default=False, blank=False, null=True)
