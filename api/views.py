@@ -81,14 +81,28 @@ def UserDelete(request, pk):
     return Response(status=status.HTTP_204_NO_CONTENT)
 
 #Product APIs
+#Product search
 @api_view(['GET'])
 def ProductSearch(request, param):
     try:
-        product = Product.objects.get(name=param)
+        product = Product.objects.filter(name__icontains=param)
+        
     except Product.DoesNotExist:
         return Response(status=status.HTTP_404_NOT_FOUND)
 
-    serializer = ProductSerializer(product)
+    serializer = ProductSerializer(product, many=True)
+    return Response(serializer.data, status=status.HTTP_200_OK)
+
+#Product search based on category
+@api_view(['GET'])
+def ProductCategoricalSearch(request, category, param):
+    try:
+        product = Product.objects.filter(category=category).filter(name__icontains=param)
+        #product = first_qs.objects.filter(name__icontains=param)
+    except Product.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
+    serializer = ProductSerializer(product, many=True)
     return Response(serializer.data, status=status.HTTP_200_OK)
 
         
