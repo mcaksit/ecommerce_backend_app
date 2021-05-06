@@ -5,6 +5,7 @@ from rest_framework.generics import ListAPIView
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.filters import SearchFilter, OrderingFilter
+from rest_framework.views import APIView
 
 from .models import User, Product
 from .serializers import UserSerializer, ProductSerializer
