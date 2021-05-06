@@ -31,7 +31,7 @@ class Product(models.Model):
     image = models.CharField(max_length=200)
     category = models.CharField(max_length=50)
     stock = models.CharField(max_length=20)
-    price = models.CharField(max_length=20)
+    price = models.IntegerField()
     score = models.CharField(max_length=5)
     click_count = models.CharField(max_length=30)
     description = models.CharField(max_length=500)
