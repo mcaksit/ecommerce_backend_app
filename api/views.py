@@ -6,25 +6,30 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.filters import SearchFilter, OrderingFilter
 from rest_framework.views import APIView
+from django.db.models import Q
+from django.http import Http404
 
-from .models import User, Product
-from .serializers import UserSerializer, ProductSerializer
+from .models import *
+from .serializers import *
 
 
 @api_view(['GET'])
 def apiOverview(request):
     api_urls = {
-        'User List':'/user-list/',
-        'User Details':'/user-detail/<str:pk>/',
-        'User Create':'/user-create/',
-        'User Update':'/user-update/<str:pk>/',
-        'User Delete':'/user-delete/<str:pk>/',
-        'Product List':'/product-list/',
-        'Product Search':'/product/?search=<param>',
-        'Product Details':'/product-detail/<str:pk>/',
-        'Product Create':'/product-create/',
-        'Product Update':'/product-update/<str:pk>/',
-        'Product Delete':'/product-delete/<str:pk>/',
+        'User List':'user-list/',
+        'User Details':'user-detail/<str:pk>/',
+        'User Create':'user-create/',
+        'User Update':'user-update/<str:pk>/',
+        'User Delete':'user-delete/<str:pk>/',
+        'Product List':'product-list/',
+        'Product Search':'product/?search=<param>',
+        'Product Details':'product-detail/<str:pk>/',
+        'Product Create':'product-create/',
+        'Product Update':'product-update/<str:pk>/',
+        'Product Delete':'product-delete/<str:pk>/',
+        '!(Alternative) Products list':'list-products/',
+        '!(Alternative) Products By Categories':'products/<slug:category_slug>/',
+        '!(Alternative) Product Details':'products/<slug:category_slug>/<slug:product_slug>/',
     }
     return Response(api_urls)
 
@@ -158,3 +163,34 @@ def ProductDelete(request, pk):
     
     product.delete()
     return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class ProductsList(APIView):
+    def get(self, request, format=None):
+        products = Product.objects.all()
+        serializer = ProductSerializer(products, many=True)
+        return Response(serializer.data)
+
+class ProductDetail(APIView):
+    def get_object(self, category_slug, product_slug):
+        try:
+            return Product.objects.filter(category__slug=category_slug).get(slug=product_slug)
+        except Product.DoesNotExist:
+            raise Http404
+    
+    def get(self, request, category_slug, product_slug, format=None):
+        product = self.get_object(category_slug, product_slug)
+        serializer = ProductSerializer(product)
+        return Response(serializer.data)
+
+class CategoryDetail(APIView):
+    def get_object(self, category_slug):
+        try:
+            return Category.objects.get(slug=category_slug)
+        except Product.DoesNotExist:
+            raise Http404
+    
+    def get(self, request, category_slug, format=None):
+        category = self.get_object(category_slug)
+        serializer = CategorySerializer(category)
+        return Response(serializer.data)
