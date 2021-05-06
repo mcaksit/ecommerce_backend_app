@@ -36,7 +36,7 @@ class Category(models.Model):
 
 
 class Product(models.Model):
-    category = models.ForeignKey(Category, related_name='products', on_delete=models.CASCADE)
+    #category = models.ForeignKey(Category, related_name='products', on_delete=models.CASCADE)
     name = models.CharField(max_length=255)
     slug = models.SlugField(max_length=255)
     image = models.CharField(max_length=255)
@@ -58,15 +58,15 @@ class Product(models.Model):
 
 
 class OrderItem(models.Model):
-    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    #product = models.ForeignKey(Product, on_delete=models.CASCADE)
     #order = models.ForeignKey(Order, on_delete=models.CASCADE)
     quantity = models.IntegerField(default=0, null=True, blank=True)
     date_added = models.DateTimeField(default=timezone.now)
 
 
 class Order(models.Model):
-    customer = models.ForeignKey(User, on_delete=models.CASCADE)
-    items = models.ManyToManyField(OrderItem)
+    #customer = models.ForeignKey(User, on_delete=models.CASCADE)
+    #items = models.ManyToManyField(OrderItem)
     date_initialized = models.DateTimeField(default=timezone.now)
     date_ordered = models.DateTimeField(null=True)
     completed = models.BooleanField(default=False, blank=False, null=True)
@@ -77,8 +77,8 @@ class Order(models.Model):
 
 
 class ShippingAddress(models.Model):
-    customer = models.ForeignKey(User, on_delete=models.CASCADE)
-    order = models.ForeignKey(Order, on_delete=models.CASCADE)
+    #customer = models.ForeignKey(User, on_delete=models.CASCADE)
+    #order = models.ForeignKey(Order, on_delete=models.CASCADE)
     city = models.CharField(max_length=255, null=False)
     district = models.CharField(max_length=255, null=False)
     full_address = models.CharField(max_length=255, null=False)
