@@ -21,6 +21,7 @@ def apiOverview(request):
         'User Create':'user-create/',
         'User Update':'user-update/<str:pk>/',
         'User Delete':'user-delete/<str:pk>/',
+        'User Login':'user-login/',
         'Product List':'product-list/',
         'Product Search':'product/?search=<param>',
         'Product Details':'product-detail/<str:pk>/',
@@ -59,6 +60,25 @@ def UserCreate(request):
         serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+#User Login
+@api_view(['POST'])
+def UserLogin(request):
+    email = request.data.get('email')
+    password = request.data.get('password')
+
+    try:
+        user_qs = User.objects.get(email=email)
+    except User.DoesNotExist:
+        return Response("User does not exist", status=status.HTTP_404_NOT_FOUND)    
+
+    if password == user_qs.password:
+        serializer = UserSerializer(user_qs)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    else:
+        return Response("Entered wrong password!", status=status.HTTP_404_NOT_FOUND)
+    
 
 #Update a user
 @api_view(['POST'])
