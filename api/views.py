@@ -31,13 +31,17 @@ def apiOverview(request):
         '!(Alternative) Products list':'list-products/',
         '!(Alternative) Products By Categories':'products/<slug:category_slug>/',
         '!(Alternative) Product Details':'products/<slug:category_slug>/<slug:product_slug>/',
+        'Cart Details':'cart-details/<int:pk>/',
     }
     return Response(api_urls)
 
 @api_view(['GET'])
 def UserList(request):
+    print("1")
     users = User.objects.all()
-    serializer = UserSerializer(users, many=True)
+    carts = Cart.objects.all()
+    print("2")
+    serializer = UserSerializer(carts, many=True)
     return Response(serializer.data, status=status.HTTP_200_OK)
 
 @api_view(['GET'])
@@ -136,6 +140,7 @@ def ProductCategoricalSearch(request, category, param):
 def ProductList(request):    
     products = Product.objects.all()
     serializer = ProductSerializer(products, many=True)
+    print(serializer)
     return Response(serializer.data)
 
 @api_view(['GET'])
@@ -214,3 +219,27 @@ class CategoryDetail(APIView):
         category = self.get_object(category_slug)
         serializer = CategorySerializer(category)
         return Response(serializer.data)
+        
+
+@api_view(['GET'])
+def UserCart(request, pk):
+    print(0)
+    try:
+        customer = User.objects.get(id=pk)
+        print(1)
+        cart, created = Cart.objects.get_or_create(customer=customer, completed=False)
+        print(1.5)
+        items = cart.cartitem_set.all()
+        #print(items)
+    except User.DoesNotExist:
+        print(2)
+        items = []
+
+
+    serializer = CartItemSerializer(items, many=True)
+    print(serializer)
+
+    print(3)
+    context = {'items': items}
+    print(4)
+    return Response(serializer.data, status=status.HTTP_200_OK)

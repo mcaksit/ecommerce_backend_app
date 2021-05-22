@@ -14,7 +14,7 @@ class User(models.Model):
     username = models.CharField(max_length=255)
     password = models.CharField(max_length=255)
     phone = models.CharField(max_length=255)
-    email = models.CharField(max_length=255)
+    email = models.CharField(max_length=255, unique=True)
     date_created = models.DateTimeField(default=timezone.now)
     
     def __str__(self):
@@ -59,14 +59,15 @@ class Product(models.Model):
 
 class OrderItem(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
-    #order = models.ForeignKey(Order, on_delete=models.CASCADE)
-    quantity = models.IntegerField(default=0, null=True, blank=True)
-    date_added = models.DateTimeField(default=timezone.now)
 
 
 class Order(models.Model):
-    customer = models.ForeignKey(User, on_delete=models.CASCADE)
+    customer = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
     items = models.ManyToManyField(OrderItem)
+
+
+class Cart(models.Model):
+    customer = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
     date_initialized = models.DateTimeField(default=timezone.now)
     date_ordered = models.DateTimeField(null=True)
     completed = models.BooleanField(default=False, blank=False, null=True)
@@ -76,12 +77,19 @@ class Order(models.Model):
         return str(self.transaction_id)
 
 
+class CartItem(models.Model):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, null=True, blank=True)
+    cart = models.ForeignKey(Cart, on_delete=models.CASCADE, null=True, blank=True)
+    quantity = models.IntegerField(default=0, null=True, blank=True)
+    date_added = models.DateTimeField(default=timezone.now)
+
+
 class ShippingAddress(models.Model):
-    customer = models.ForeignKey(User, on_delete=models.CASCADE)
-    order = models.ForeignKey(Order, on_delete=models.CASCADE)
-    city = models.CharField(max_length=255, null=False)
-    district = models.CharField(max_length=255, null=False)
-    full_address = models.CharField(max_length=255, null=False)
+    customer = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
+    cart = models.ForeignKey(Cart, on_delete=models.CASCADE, null=True, blank=True)
+    city = models.CharField(max_length=255, null=True)
+    district = models.CharField(max_length=255, null=True)
+    full_address = models.CharField(max_length=255, null=True)
     date_added = models.DateTimeField(default=timezone.now)
 
     def __str__(self):

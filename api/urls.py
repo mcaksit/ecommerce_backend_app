@@ -22,4 +22,6 @@ urlpatterns = [
     path('list-products/', views.ProductsList.as_view()),
     path('products/<slug:category_slug>/<slug:product_slug>/', views.ProductDetails.as_view()),
     path('products/<slug:category_slug>/', views.CategoryDetail.as_view()),
+    #Cart api urls
+    path('cart-details/<int:pk>/', views.UserCart, name='cart-details'),
 ]
