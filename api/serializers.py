@@ -18,7 +18,7 @@ class OrderItemSerializer(serializers.ModelSerializer):
     #products = ProductSerializer(many=True)
 
     class Meta:
-        model = OrderItem
+        model = OrderItem_v2
         fields = '__all__'
 
 
@@ -26,7 +26,7 @@ class OrderSerializer(serializers.ModelSerializer):
     #orderItems = OrderItemSerializer(many=True)
 
     class Meta:
-        model = Order
+        model = Order_v2
         fields = '__all__'
 
 
@@ -46,12 +46,12 @@ class CartSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class UserSerializer(serializers.ModelSerializer):
+class CustomerSerializer(serializers.ModelSerializer):
     #carts = CartSerializer(many=True)
     #shippingAddresses = ShippingAddressSerializer(many=True)
 
     class Meta:
-        model = User
+        model = Customer
         fields = '__all__'
 
 

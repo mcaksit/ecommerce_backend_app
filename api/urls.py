@@ -3,13 +3,13 @@ from . import views
 
 urlpatterns = [
     path('', views.apiOverview, name='api-overview'),
-    #User api urls
-    path('user-list/', views.UserList, name='user-list'),
-    path('user-detail/<int:pk>/', views.UserDetail, name='user-detail'),
-    path('user-create/', views.UserCreate, name='user-create'),
-    path('user-update/<int:pk>/', views.UserUpdate, name='user-update'),
-    path('user-delete/<int:pk>/', views.UserDelete, name='user-delete'),
-    path('user-login/', views.UserLogin, name='user-login'),
+    #Customer api urls
+    path('customer-list/', views.CustomerList, name='customer-list'),
+    path('customer-detail/<int:pk>/', views.CustomerDetail, name='customer-detail'),
+    path('customer-create/', views.CustomerCreate, name='customer-create'),
+    path('customer-update/<int:pk>/', views.CustomerUpdate, name='customer-update'),
+    path('customer-delete/<int:pk>/', views.CustomerDelete, name='customer-delete'),
+    path('user-login/', views.CustomerLogin, name='user-login'),
     #Product api urls
     path('product/search=<str:category>/<str:param>/',views.ProductCategoricalSearch, name='product-categorical-search'),
     path('product/search=<str:param>/',views.ProductSearch, name='product-search'),
@@ -23,5 +23,4 @@ urlpatterns = [
     path('products/<slug:category_slug>/<slug:product_slug>/', views.ProductDetails.as_view()),
     path('products/<slug:category_slug>/', views.CategoryDetail.as_view()),
     #Cart api urls
-    path('cart-details/<int:pk>/', views.UserCart, name='cart-details'),
 ]

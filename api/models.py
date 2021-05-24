@@ -1,4 +1,5 @@
 from django.db import models
+from django.contrib.auth.models import User
 from django.utils import timezone
 
 # Create your models here.
@@ -9,16 +10,17 @@ ROLE_CHOICES = (
     ('ProductManager', 'ProductManager'),
 )
 
-class User(models.Model):
-    role = models.CharField(choices=ROLE_CHOICES, max_length=255)
-    username = models.CharField(max_length=255)
+class Customer(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, null=True, blank=True)
+    #role = models.CharField(choices=ROLE_CHOICES, max_length=255)
+    name = models.CharField(max_length=255)
     password = models.CharField(max_length=255)
     phone = models.CharField(max_length=255)
     email = models.CharField(max_length=255, unique=True)
     date_created = models.DateTimeField(default=timezone.now)
     
     def __str__(self):
-        return self.username
+        return self.name
 
 
 class Category(models.Model):
@@ -62,14 +64,13 @@ class OrderItem(models.Model):
 
 
 class Order(models.Model):
-    customer = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
+    customer = models.ForeignKey(Customer, on_delete=models.CASCADE, null=True, blank=True)
     items = models.ManyToManyField(OrderItem)
 
 
 class Cart(models.Model):
-    customer = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
+    customer = models.ForeignKey(Customer, on_delete=models.CASCADE, null=True, blank=True)
     date_initialized = models.DateTimeField(default=timezone.now)
-    date_ordered = models.DateTimeField(null=True)
     completed = models.BooleanField(default=False, blank=False, null=True)
     transaction_id = models.CharField(max_length=255, null=True)
 
@@ -84,9 +85,26 @@ class CartItem(models.Model):
     date_added = models.DateTimeField(default=timezone.now)
 
 
+class Order_v2(models.Model):
+    customer = models.ForeignKey(Customer, on_delete=models.SET_NULL, null=True, blank=True)
+    transaction_id = models.CharField(max_length=255, null=True)
+    date_ordered = models.DateTimeField(default=timezone.now)
+    Status = models.CharField(max_length=255, null=True)
+
+    def __str__(self):
+        return str(self.transaction_id)
+
+
+class OrderItem_v2(models.Model):
+    product = models.ForeignKey(Product, on_delete=models.SET_NULL, null=True, blank=True)
+    order = models.ForeignKey(Order_v2, on_delete=models.CASCADE, null=True, blank=True)
+    quantity = models.IntegerField(default=0, null=True, blank=True)
+    date_added = models.DateTimeField(null=True)
+
+
 class ShippingAddress(models.Model):
-    customer = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
-    cart = models.ForeignKey(Cart, on_delete=models.CASCADE, null=True, blank=True)
+    customer = models.ForeignKey(Customer, on_delete=models.CASCADE, null=True, blank=True)
+    order = models.ForeignKey(Order_v2, on_delete=models.CASCADE, null=True, blank=True)
     city = models.CharField(max_length=255, null=True)
     district = models.CharField(max_length=255, null=True)
     full_address = models.CharField(max_length=255, null=True)

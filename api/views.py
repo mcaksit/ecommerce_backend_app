@@ -16,12 +16,12 @@ from .serializers import *
 @api_view(['GET'])
 def apiOverview(request):
     api_urls = {
-        'User List':'user-list/',
-        'User Details':'user-detail/<str:pk>/',
-        'User Create':'user-create/',
-        'User Update':'user-update/<str:pk>/',
-        'User Delete':'user-delete/<str:pk>/',
         'User Login':'user-login/',
+        'Customer List':'customer-list/',
+        'Customer Details':'customer-detail/<str:pk>/',
+        'Customer Create':'customer-create/',
+        'Customer Update':'customer-update/<str:pk>/',
+        'Customer Delete':'customer-delete/<str:pk>/',
         'Product List':'product-list/',
         'Product Search':'product/?search=<param>',
         'Product Details':'product-detail/<str:pk>/',
@@ -31,34 +31,33 @@ def apiOverview(request):
         '!(Alternative) Products list':'list-products/',
         '!(Alternative) Products By Categories':'products/<slug:category_slug>/',
         '!(Alternative) Product Details':'products/<slug:category_slug>/<slug:product_slug>/',
-        'Cart Details':'cart-details/<int:pk>/',
     }
     return Response(api_urls)
 
 @api_view(['GET'])
-def UserList(request):
-    print("1")
-    users = User.objects.all()
-    carts = Cart.objects.all()
-    print("2")
-    serializer = UserSerializer(carts, many=True)
+def CustomerList(request):
+    # print("1")
+    customers = Customer.objects.all()
+    #carts = Cart.objects.all()
+    # print("2")
+    serializer = CustomerSerializer(customers, many=True)
     return Response(serializer.data, status=status.HTTP_200_OK)
 
 @api_view(['GET'])
-def UserDetail(request, pk):
+def CustomerDetail(request, pk):
     try:
-        user = User.objects.get(id=pk)
-    except User.DoesNotExist:
+        customer = Customer.objects.get(id=pk)
+    except Customer.DoesNotExist:
         return Response(status=status.HTTP_404_NOT_FOUND)
 
-    #Get User detail
-    serializer = UserSerializer(user)
+    #Get Customer detail
+    serializer = CustomerSerializer(customer)
     return Response(serializer.data, status=status.HTTP_200_OK)
        
-#Create user
+#Create customer
 @api_view(['POST'])
-def UserCreate(request):
-    serializer = UserSerializer(data=request.data)
+def CustomerCreate(request):
+    serializer = CustomerSerializer(data=request.data)
 
     if serializer.is_valid():
         serializer.save()
@@ -66,48 +65,48 @@ def UserCreate(request):
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-#User Login
+#Customer Login
 @api_view(['POST'])
-def UserLogin(request):
+def CustomerLogin(request):
     email = request.data.get('email')
     password = request.data.get('password')
 
     try:
-        user_qs = User.objects.get(email=email)
-    except User.DoesNotExist:
+        customer_qs = Customer.objects.get(email=email)
+    except Customer.DoesNotExist:
         return Response("User does not exist", status=status.HTTP_404_NOT_FOUND)    
 
-    if password == user_qs.password:
-        serializer = UserSerializer(user_qs)
+    if password == customer_qs.password:
+        serializer = CustomerSerializer(customer_qs)
         return Response(serializer.data, status=status.HTTP_200_OK)
     else:
         return Response("Entered wrong password!", status=status.HTTP_404_NOT_FOUND)
     
 
-#Update a user
+#Update a customer
 @api_view(['POST'])
-def UserUpdate(request, pk):
+def CustomerUpdate(request, pk):
     try:
-        user = User.objects.get(id=pk)
-    except User.DoesNotExist:
+        customer = Customer.objects.get(id=pk)
+    except Customer.DoesNotExist:
         return Response(status=status.HTTP_404_NOT_FOUND)
-    user = User.objects.get(id=pk)
-    serializer = UserSerializer(instance=user, data=request.data)
+    customer = Customer.objects.get(id=pk)
+    serializer = CustomerSerializer(instance=customer, data=request.data)
 
     if serializer.is_valid():
         serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-#Delete a user
+#Delete a customer
 @api_view(['DELETE'])
-def UserDelete(request, pk):
+def CustomerDelete(request, pk):
     try:
-        user = User.objects.get(id=pk)
-    except User.DoesNotExist:
+        customer = Customer.objects.get(id=pk)
+    except Customer.DoesNotExist:
         return Response(status=status.HTTP_404_NOT_FOUND)
    
-    user.delete()    
+    customer.delete()    
     return Response(status=status.HTTP_204_NO_CONTENT)
 
 #Product APIs
@@ -221,25 +220,25 @@ class CategoryDetail(APIView):
         return Response(serializer.data)
         
 
-@api_view(['GET'])
-def UserCart(request, pk):
-    print(0)
-    try:
-        customer = User.objects.get(id=pk)
-        print(1)
-        cart, created = Cart.objects.get_or_create(customer=customer, completed=False)
-        print(1.5)
-        items = cart.cartitem_set.all()
-        #print(items)
-    except User.DoesNotExist:
-        print(2)
-        items = []
+# @api_view(['GET'])
+# def UserCart(request, pk):
+#     print(0)
+#     try:
+#         customer = User.objects.get(id=pk)
+#         print(1)
+#         cart, created = Cart.objects.get_or_create(customer=customer, completed=False)
+#         print(1.5)
+#         items = cart.cartitem_set.all()
+#         #print(items)
+#     except User.DoesNotExist:
+#         print(2)
+#         items = []
 
 
-    serializer = CartItemSerializer(items, many=True)
-    print(serializer)
+#     serializer = CartItemSerializer(items, many=True)
+#     print(serializer)
 
-    print(3)
-    context = {'items': items}
-    print(4)
-    return Response(serializer.data, status=status.HTTP_200_OK)
+#     print(3)
+#     context = {'items': items}
+#     print(4)
+#     return Response(serializer.data, status=status.HTTP_200_OK)
