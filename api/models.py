@@ -10,6 +10,25 @@ ROLE_CHOICES = (
     ('ProductManager', 'ProductManager'),
 )
 
+
+# def django_sub_dict(obj):
+#     allowed_fields = obj.allowed_fields() # pick the list containing the requested fields
+#     sub_dict = {}
+#     for field in obj._meta.fields: # go through all the fields of the model (obj)
+#         if field.name in allowed_fields: # be sure to only pick fields requested
+#             if field.is_relation: # will result in true if it's a foreign key
+#                 sub_dict[field.name] = django_sub_dict(
+#                     getattr(obj, field.name)) # call this function, with a new object, the model which is being referred to by the foreign key.
+#             else: # not a foreign key? Just include the value (e.g., float, integer, string)
+#                 sub_dict[field.name] = getattr(obj, field.name)
+#     return sub_dict # returns the dict generated
+
+
+# class ProductManager(models.Manager):
+#     def get_by_natural_key(self, name, image, price, category, score):
+#         return self.get(name=name, image=image, price=price, category=category, score=score)
+
+
 class Customer(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, null=True, blank=True)
     #role = models.CharField(choices=ROLE_CHOICES, max_length=255)
@@ -53,10 +72,26 @@ class Product(models.Model):
         ordering = ('-date_created',)
 
     def __str__(self):
+        #return "{" + "name:{0} , image:{1} , price:{2} , category:{3} , score:{4}".format(self.name, self.image, self.price, self.category, self.score) + "}"
         return self.name
 
     def get_absolute_url(self):
         return f'/{self.category.slug}/{self.slug}/'
+
+    # def allowed_fields(self):
+    #     return [
+    #             'name',
+    #             'image',
+    #             'price',
+    #             'category',
+    #             'score',
+    #             ]
+
+    # def natural_key(self):
+    #     return django_sub_dict(self)
+
+    # def natural_key(self):
+    #     return (self.name, self.image, self.price, self.category, self.score)
 
 
 class OrderItem(models.Model):
@@ -75,12 +110,12 @@ class Cart(models.Model):
     transaction_id = models.CharField(max_length=255, null=True)
 
     def __str__(self):
-        return str(self.transaction_id)
+        return str(self.id)
 
 
 class CartItem(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, null=True, blank=True)
-    cart = models.ForeignKey(Cart, on_delete=models.CASCADE, null=True, blank=True)
+    cart = models.ForeignKey(Cart, related_name='cartItems', on_delete=models.CASCADE, null=True, blank=True)
     quantity = models.IntegerField(default=0, null=True, blank=True)
     date_added = models.DateTimeField(default=timezone.now)
 

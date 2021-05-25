@@ -1,3 +1,4 @@
+from typing import get_args
 from django.http import JsonResponse
 from django.shortcuts import render
 from rest_framework import status
@@ -6,6 +7,7 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.filters import SearchFilter, OrderingFilter
 from rest_framework.views import APIView
+from django.core import serializers
 from django.db.models import Q
 from django.http import Http404
 
@@ -31,6 +33,8 @@ def apiOverview(request):
         '!(Alternative) Products list':'list-products/',
         '!(Alternative) Products By Categories':'products/<slug:category_slug>/',
         '!(Alternative) Product Details':'products/<slug:category_slug>/<slug:product_slug>/',
+        'Cart Details':'customer-cart/<int:pk>/',
+        'Cart Products':'customer-cart-products/<int:pk>/',
     }
     return Response(api_urls)
 
@@ -220,25 +224,40 @@ class CategoryDetail(APIView):
         return Response(serializer.data)
         
 
-# @api_view(['GET'])
-# def UserCart(request, pk):
-#     print(0)
-#     try:
-#         customer = User.objects.get(id=pk)
-#         print(1)
-#         cart, created = Cart.objects.get_or_create(customer=customer, completed=False)
-#         print(1.5)
-#         items = cart.cartitem_set.all()
-#         #print(items)
-#     except User.DoesNotExist:
-#         print(2)
-#         items = []
+class CustomerCart2(APIView):
+    def get_object(self, pk):
+        try:
+            return Cart.objects.get(id=pk)
+        except CartItem.DoesNotExist:
+            raise Http404
+
+    def get(self, request, pk, format=None):
+        cart = self.get_object(pk)
+        serializer = CartSerializer(cart)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-#     serializer = CartItemSerializer(items, many=True)
-#     print(serializer)
+@api_view(['GET'])
+def CustomerCart(request, pk):
+    try:
+        customer = Customer.objects.get(id=pk)
+        print(customer)
+        cart, created = Cart.objects.get_or_create(customer=customer)
+        cartItems = CartItem.objects.filter(cart=cart.id)
+        item = Product.objects.get(id=str(cartItems[0].product.id))
 
-#     print(3)
-#     context = {'items': items}
-#     print(4)
-#     return Response(serializer.data, status=status.HTTP_200_OK)
+        items = []
+        cost = 0
+
+        for i in range(len(cartItems)):
+            item = Product.objects.get(id=str(cartItems[i].product.id))
+            items.append(item)
+            cost += item.price * cartItems[i].quantity
+
+        #artifact = Artifact.objects.select_related().get(pk=pk)
+
+    except Customer.DoesNotExist:
+        items = []
+
+    serializer = ProductSerializer(items, many=True)
+    return Response(serializer.data, status=status.HTTP_200_OK)

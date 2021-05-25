@@ -31,7 +31,7 @@ class OrderSerializer(serializers.ModelSerializer):
 
 
 class CartItemSerializer(serializers.ModelSerializer):
-    #products = ProductSerializer(many=True)
+    #products = ProductSerializer()
 
     class Meta:
         model = CartItem
@@ -39,7 +39,7 @@ class CartItemSerializer(serializers.ModelSerializer):
 
 
 class CartSerializer(serializers.ModelSerializer):
-    #cartItems = CartItemSerializer(many=True)
+    cartItems = CartItemSerializer(many=True)
 
     class Meta:
         model = Cart

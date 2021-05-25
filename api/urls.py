@@ -23,4 +23,7 @@ urlpatterns = [
     path('products/<slug:category_slug>/<slug:product_slug>/', views.ProductDetails.as_view()),
     path('products/<slug:category_slug>/', views.CategoryDetail.as_view()),
     #Cart api urls
+    path('customer-cart/<int:pk>/', views.CustomerCart2.as_view()),
+    path('customer-cart-products/<int:pk>/', views.CustomerCart, name='customer-cart'),
+    
 ]
