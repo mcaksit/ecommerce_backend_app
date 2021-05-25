@@ -23,7 +23,8 @@ urlpatterns = [
     path('products/<slug:category_slug>/<slug:product_slug>/', views.ProductDetails.as_view()),
     path('products/<slug:category_slug>/', views.CategoryDetail.as_view()),
     #Cart api urls
-    path('customer-cart/<int:pk>/', views.CustomerCart2.as_view()),
-    path('customer-cart-products/<int:pk>/', views.CustomerCart, name='customer-cart'),
-    
+    path('view-cart/<int:pk>/', views.CustomerCart2.as_view()),
+    path('view-cart-products/<int:pk>/', views.CustomerCart, name='customer-cart'),
+    path('add-to-cart/', views.AddToCart, name='add-to-cart'),
+    path('remove-from-cart/', views.RemoveFromCart, name='remove-from-cart'),
 ]

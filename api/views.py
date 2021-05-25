@@ -33,17 +33,16 @@ def apiOverview(request):
         '!(Alternative) Products list':'list-products/',
         '!(Alternative) Products By Categories':'products/<slug:category_slug>/',
         '!(Alternative) Product Details':'products/<slug:category_slug>/<slug:product_slug>/',
-        'Cart Details':'customer-cart/<int:pk>/',
-        'Cart Products':'customer-cart-products/<int:pk>/',
+        'Cart Details':'view-cart/<int:pk>/',
+        'Cart Products':'view-cart-products/<int:pk>/',
+        'Add To Cart':'add-to-cart/',
+        'Remove From Cart':'remove-from-cart/',
     }
     return Response(api_urls)
 
 @api_view(['GET'])
 def CustomerList(request):
-    # print("1")
     customers = Customer.objects.all()
-    #carts = Cart.objects.all()
-    # print("2")
     serializer = CustomerSerializer(customers, many=True)
     return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -94,8 +93,8 @@ def CustomerUpdate(request, pk):
         customer = Customer.objects.get(id=pk)
     except Customer.DoesNotExist:
         return Response(status=status.HTTP_404_NOT_FOUND)
-    customer = Customer.objects.get(id=pk)
-    serializer = CustomerSerializer(instance=customer, data=request.data)
+
+    serializer = CustomerSerializerUpdate(instance=customer, data=request.data)
 
     if serializer.is_valid():
         serializer.save()
@@ -261,3 +260,88 @@ def CustomerCart(request, pk):
 
     serializer = ProductSerializer(items, many=True)
     return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+@api_view(['POST'])
+def AddToCart(request):
+    customer_id = request.data.get('customer_id')
+    cartItem = request.data.get('cartItem')
+
+    try:
+        customer_qs = Customer.objects.get(id=customer_id)
+    except Customer.DoesNotExist:
+        return Response("User does not exist!", status=status.HTTP_404_NOT_FOUND)
+
+    cart, created = Cart.objects.get_or_create(customer=customer_qs)
+    
+    try:
+        product = Product.objects.get(id=cartItem.get("product"))
+    except Product.DoesNotExist:
+        return Response("Product does not exist!", status=status.HTTP_404_NOT_FOUND) 
+
+
+    serializer = CartItemSerializer(data=cartItem)
+
+    if serializer.is_valid():
+        product = Product.objects.get(id=cartItem.get("product"))
+        if (product.stock - cartItem.get("quantity") >= 0):
+            product.stock = product.stock - cartItem.get("quantity")
+            cat = product.category
+            in_data = {
+                        "id": product.id,
+                        "name": product.name,
+                        "slug": product.slug,
+                        "image": product.image,
+                        "stock": product.stock,
+                        "price": product.price,
+                        "category": cat.id
+                    }
+            serializer2 = ProductSerializer(instance=product, data=in_data)
+            if serializer2.is_valid():
+                serializer2.save()
+            serializer.save(cart=cart)
+        else :
+            return Response("Product is out of stock!", status=status.HTTP_400_BAD_REQUEST)
+        
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['POST'])
+def RemoveFromCart(request):
+    customer_id = request.data.get('customer_id')
+    cartItem_id = request.data.get('cartItem_id')
+
+    try:
+        customer_qs = Customer.objects.get(id=customer_id)
+    except Customer.DoesNotExist:
+        return Response("User does not exist!", status=status.HTTP_404_NOT_FOUND)
+
+    cart, created = Cart.objects.get_or_create(customer=customer_qs)
+    cartItems = CartItem.objects.filter(cart=cart.id)
+    
+    try:
+        cartItem = cartItems.get(id=cartItem_id)
+    except CartItem.DoesNotExist:
+        return Response("Item does not exist!", status=status.HTTP_404_NOT_FOUND) 
+
+    product = cartItem.product
+    product.stock = product.stock + cartItem.quantity
+    cat = product.category
+    in_data = {
+                "id": product.id,
+                "name": product.name,
+                "slug": product.slug,
+                "image": product.image,
+                "stock": product.stock,
+                "price": product.price,
+                "category": cat.id
+            }
+    serializer = ProductSerializer(instance=product, data=in_data)
+    if serializer.is_valid():
+        serializer.save()
+        cartItem.delete()
+    else:
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    return Response(status=status.HTTP_204_NO_CONTENT)

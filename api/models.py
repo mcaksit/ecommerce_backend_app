@@ -104,7 +104,7 @@ class Order(models.Model):
 
 
 class Cart(models.Model):
-    customer = models.ForeignKey(Customer, on_delete=models.CASCADE, null=True, blank=True)
+    customer = models.ForeignKey(Customer, related_name='cart', on_delete=models.CASCADE, null=True, blank=True)
     date_initialized = models.DateTimeField(default=timezone.now)
     completed = models.BooleanField(default=False, blank=False, null=True)
     transaction_id = models.CharField(max_length=255, null=True)
