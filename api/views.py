@@ -160,7 +160,7 @@ def ProductDetail(request, pk):
 
 @api_view(['POST'])
 def ProductCreate(request):
-    serializer = ProductSerializerUpdate(data=request.data,partial=True)
+    serializer = ProductSerializerUpdate(data=request.data)
 
     if serializer.is_valid():
         serializer.save()
@@ -175,7 +175,7 @@ def ProductUpdate(request, pk):
     except Product.DoesNotExist:
         return Response(status=status.HTTP_404_NOT_FOUND)
 
-    serializer = ProductSerializerUpdate(instance=product, data=request.data)
+    serializer = ProductSerializerUpdate(instance=product, data=request.data, partial=True)
 
     if serializer.is_valid():
         serializer.save()
