@@ -31,6 +31,8 @@ def apiOverview(request):
         'Product Create':'product-create/',
         'Product Update':'product-update/<str:pk>/',
         'Product Delete':'product-delete/<str:pk>/',
+        'Product Reviews':'product-reviews/<int:pk>/',
+        'Create/Update a Review':'make-review/',
         '!(Alternative) Products list':'list-products/',
         '!(Alternative) Products By Categories':'products/<slug:category_slug>/',
         '!(Alternative) Product Details':'products/<slug:category_slug>/<slug:product_slug>/',
