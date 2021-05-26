@@ -160,7 +160,7 @@ def ProductDetail(request, pk):
 
 @api_view(['POST'])
 def ProductCreate(request):
-    serializer = ProductSerializerUpdate(data=request.data)
+    serializer = ProductSerializerUpdate(data=request.data,partial=True)
 
     if serializer.is_valid():
         serializer.save()
