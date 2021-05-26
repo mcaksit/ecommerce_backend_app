@@ -1,4 +1,5 @@
 from typing import get_args
+from django.db.models.fields import NullBooleanField
 from django.http import JsonResponse
 from django.shortcuts import render
 from rest_framework import status
@@ -60,7 +61,7 @@ def CustomerDetail(request, pk):
 #Create customer
 @api_view(['POST'])
 def CustomerCreate(request):
-    serializer = CustomerSerializer(data=request.data)
+    serializer = CustomerSerializerUpdate(data=request.data)
 
     if serializer.is_valid():
         serializer.save()
@@ -80,7 +81,7 @@ def CustomerLogin(request):
         return Response("User does not exist", status=status.HTTP_404_NOT_FOUND)    
 
     if password == customer_qs.password:
-        serializer = CustomerSerializer(customer_qs)
+        serializer = CustomerSerializerUpdate(customer_qs)
         return Response(serializer.data, status=status.HTTP_200_OK)
     else:
         return Response("Entered wrong password!", status=status.HTTP_404_NOT_FOUND)
@@ -142,7 +143,6 @@ def ProductCategoricalSearch(request, category, param):
 def ProductList(request):    
     products = Product.objects.all()
     serializer = ProductSerializer(products, many=True)
-    print(serializer)
     return Response(serializer.data)
 
 @api_view(['GET'])
@@ -158,7 +158,7 @@ def ProductDetail(request, pk):
 
 @api_view(['POST'])
 def ProductCreate(request):
-    serializer = ProductSerializer(data=request.data)
+    serializer = ProductSerializerUpdate(data=request.data)
 
     if serializer.is_valid():
         serializer.save()
@@ -173,7 +173,7 @@ def ProductUpdate(request, pk):
     except Product.DoesNotExist:
         return Response(status=status.HTTP_404_NOT_FOUND)
 
-    serializer = ProductSerializer(instance=product, data=request.data)
+    serializer = ProductSerializerUpdate(instance=product, data=request.data)
 
     if serializer.is_valid():
         serializer.save()
@@ -345,3 +345,42 @@ def RemoveFromCart(request):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
     return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+@api_view(['GET'])
+def ListReviews(request, pk):
+    try:
+        reviews = Review.objects.filter(product=pk)
+    except Review.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
+    serializer = ReviewSerializer(reviews, many=True)
+    return Response(serializer.data, status=status.HTTP_200_OK)
+
+    customers = Customer.objects.all()
+
+@api_view(['POST'])
+def MakeReview(request):
+    try:
+        prod_id = request.data.get("product")
+        cust_id = request.data.get("customer")
+        cust = Customer.objects.get(id=cust_id)
+        prod = Product.objects.get(id=prod_id)
+        review, created = Review.objects.get_or_create(customer=cust, product=prod, defaults={'comment': request.data.get("comment"), 'stars': request.data.get("stars")})
+        review.comment = request.data.get("comment")
+        review.stars = request.data.get("stars")
+        review.save()
+
+        revs = Review.objects.filter(product=prod_id)
+        score_sum = 0
+        score_count = 0
+        for i in range(len(revs)):
+            if revs[i].stars:
+                score_sum += revs[i].stars
+                score_count += 1
+        prod.score = score_sum / score_count
+        prod.save()
+
+        return Response(status=status.HTTP_200_OK)
+    except:
+        return Response(status=status.HTTP_400_BAD_REQUEST)

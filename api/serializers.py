@@ -9,11 +9,24 @@ class ShippingAddressSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class ReviewSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Review
+        fields = '__all__'
+
+
 class ProductSerializer(serializers.ModelSerializer):
+    reviews = ReviewSerializer(many=True)
+
     class Meta:
         model = Product
         fields = '__all__'
 
+
+class ProductSerializerUpdate(serializers.ModelSerializer):
+    class Meta:
+        model = Product
+        fields = '__all__'
 
 class OrderItemSerializer(serializers.ModelSerializer):
     #products = ProductSerializer(many=True)
@@ -24,7 +37,8 @@ class OrderItemSerializer(serializers.ModelSerializer):
 
 
 class OrderSerializer(serializers.ModelSerializer):
-    #orderItems = OrderItemSerializer(many=True)
+    orderItems = OrderItemSerializer(many=True)
+    address = ShippingAddressSerializer(many=True)
 
     class Meta:
         model = Order_v2
@@ -57,6 +71,7 @@ class CategorySerializer(serializers.ModelSerializer):
 
 class CustomerSerializer(serializers.ModelSerializer):
     cart = CartSerializer(many=True)
+    orders = OrderSerializer(many=True)
 
     class Meta:
         model = Customer

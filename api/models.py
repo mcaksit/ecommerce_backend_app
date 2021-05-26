@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.utils import timezone
+from django.core.validators import MaxValueValidator, MinValueValidator 
 
 # Create your models here.
 
@@ -121,7 +122,7 @@ class CartItem(models.Model):
 
 
 class Order_v2(models.Model):
-    customer = models.ForeignKey(Customer, on_delete=models.SET_NULL, null=True, blank=True)
+    customer = models.ForeignKey(Customer, related_name='orders', on_delete=models.SET_NULL, null=True, blank=True)
     transaction_id = models.CharField(max_length=255, null=True)
     date_ordered = models.DateTimeField(default=timezone.now)
     Status = models.CharField(max_length=255, null=True)
@@ -132,14 +133,14 @@ class Order_v2(models.Model):
 
 class OrderItem_v2(models.Model):
     product = models.ForeignKey(Product, on_delete=models.SET_NULL, null=True, blank=True)
-    order = models.ForeignKey(Order_v2, on_delete=models.CASCADE, null=True, blank=True)
+    order = models.ForeignKey(Order_v2, related_name='orderItems', on_delete=models.CASCADE, null=True, blank=True)
     quantity = models.IntegerField(default=0, null=True, blank=True)
     date_added = models.DateTimeField(null=True)
 
 
 class ShippingAddress(models.Model):
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE, null=True, blank=True)
-    order = models.ForeignKey(Order_v2, on_delete=models.CASCADE, null=True, blank=True)
+    order = models.ForeignKey(Order_v2, related_name='address', on_delete=models.CASCADE, null=True, blank=True)
     city = models.CharField(max_length=255, null=True)
     district = models.CharField(max_length=255, null=True)
     full_address = models.CharField(max_length=255, null=True)
@@ -147,3 +148,13 @@ class ShippingAddress(models.Model):
 
     def __str__(self):
         return self.full_address
+
+class Review(models.Model):
+    customer = models.ForeignKey(Customer, on_delete=models.CASCADE)
+    product = models.ForeignKey(Product, related_name='reviews', on_delete=models.CASCADE)
+    stars = models.IntegerField(null=True, blank=True, validators=[MinValueValidator(1), MaxValueValidator(5)])
+    comment = models.TextField(blank=True, null=True)
+    date_added = models.DateTimeField(default=timezone.now)
+
+    def __str__(self):
+        return str(self.id)

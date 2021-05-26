@@ -18,6 +18,10 @@ urlpatterns = [
     path('product-create/', views.ProductCreate, name='product-create'),
     path('product-update/<int:pk>/', views.ProductUpdate, name='product-update'),
     path('product-delete/<int:pk>/', views.ProductDelete, name='product-delete'),
+    path('product-reviews/<int:pk>/', views.ListReviews, name='product-reviews'),
+    #Review api urls
+    path('make-review/', views.MakeReview, name='make-review'),
+    #path('product-reviews/<int:pk>/', views.ListReviews, name='product-reviews'),
     #Product api urls (Alternative)
     path('list-products/', views.ProductsList.as_view()),
     path('products/<slug:category_slug>/<slug:product_slug>/', views.ProductDetails.as_view()),
