@@ -339,7 +339,7 @@ def RemoveFromCart(request):
                 "price": product.price,
                 "category": cat.id
             }
-    serializer = ProductSerializer(instance=product, data=in_data)
+    serializer = ProductSerializerUpdate(instance=product, data=in_data)
     if serializer.is_valid():
         serializer.save()
         cartItem.delete()
@@ -358,8 +358,6 @@ def ListReviews(request, pk):
 
     serializer = ReviewSerializer(reviews, many=True)
     return Response(serializer.data, status=status.HTTP_200_OK)
-
-    customers = Customer.objects.all()
 
 @api_view(['POST'])
 def MakeReview(request):
