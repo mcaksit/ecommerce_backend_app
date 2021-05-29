@@ -29,8 +29,8 @@ SECRET_KEY = '4cgmo21%n^w3ayl14^_@ntcf=sc07s^fw55(5_*k+4i^vb3(w%'
 #SECRET_KEY = os.environ.get('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = (os.environ.get('DEBUG_VALUE') == 'False')
-# DEBUG = True
+# DEBUG = (os.environ.get('DEBUG_VALUE') == 'False')
+DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 
@@ -48,9 +48,19 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
+    'rest_framework.authtoken',
     'api.apps.ApiConfig',
     'corsheaders'
 ]
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.TokenAuthentication',
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ]
+}
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware', 

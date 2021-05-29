@@ -3,6 +3,8 @@ from . import views
 
 urlpatterns = [
     path('', views.apiOverview, name='api-overview'),
+    #User api urls
+    path('user-detail/<str:name>/', views.UserDetail, name='user-detail'),
     #Customer api urls
     path('customer-list/', views.CustomerList, name='customer-list'),
     path('customer-detail/<int:pk>/', views.CustomerDetail, name='customer-detail'),

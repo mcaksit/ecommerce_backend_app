@@ -5,6 +5,18 @@ from django.core.validators import MaxValueValidator, MinValueValidator
 
 # Create your models here.
 
+
+from django.conf import settings
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+from rest_framework.authtoken.models import Token
+
+@receiver(post_save, sender=settings.AUTH_USER_MODEL)
+def create_auth_token(sender, instance=None, created=False, **kwargs):
+    if created:
+        Token.objects.create(user=instance)
+
+
 ROLE_CHOICES = (
     ('Admin', 'Admin'),
     ('Customer', 'Customer'),
@@ -31,7 +43,7 @@ ROLE_CHOICES = (
 
 
 class Customer(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE, null=True, blank=True)
+    user = models.OneToOneField(User, related_name='customer', on_delete=models.CASCADE, null=True, blank=True)
     #role = models.CharField(choices=ROLE_CHOICES, max_length=255)
     name = models.CharField(max_length=255)
     password = models.CharField(max_length=255)

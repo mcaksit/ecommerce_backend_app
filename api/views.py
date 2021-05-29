@@ -15,11 +15,51 @@ from django.http import Http404
 from .models import *
 from .serializers import *
 
+from rest_framework import authentication, permissions
+from django.contrib.auth.models import User
+from rest_framework.authtoken.views import ObtainAuthToken
+from rest_framework.authtoken.models import Token
+
+# class ListUsers(APIView):
+#     """
+#     View to list all users in the system.
+
+#     * Requires token authentication.
+#     * Only admin users are able to access this view.
+#     """
+#     authentication_classes = [authentication.TokenAuthentication]
+#     permission_classes = [permissions.IsAuthenticated]
+
+#     def get(self, request, format=None):
+#         """
+#         Return a list of all users.
+#         """
+#         usernames = [user.username for user in User.objects.all()]
+#         return Response(usernames)
+
+
+# class CustomAuthToken(ObtainAuthToken):
+
+#     def post(self, request, *args, **kwargs):
+#         serializer = self.serializer_class(data=request.data,
+#                                            context={'request': request})
+#         serializer.is_valid(raise_exception=True)
+#         user = serializer.validated_data['user']
+#         token, created = Token.objects.get_or_create(user=user)
+#         return Response({
+#             'token': token.key,
+#             'user_id': user.pk,
+#             'email': user.email
+#         })
+
+
+
 
 @api_view(['GET'])
 def apiOverview(request):
     api_urls = {
         'User Login':'user-login/',
+        'Token User Login':'get-token/ ("api/" yok basında)',
         'Customer List':'customer-list/',
         'Customer Details':'customer-detail/<str:pk>/',
         'Customer Create':'customer-create/',
@@ -42,6 +82,22 @@ def apiOverview(request):
         'Remove From Cart':'remove-from-cart/',
     }
     return Response(api_urls)
+
+
+@api_view(['GET'])
+def UserDetail(request, name):
+    print(1)
+    try:
+        user = User.objects.get(username=name)
+    except User.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
+    print(2)
+    serializer = UserSerializer(user, context={'request': request})
+    print(3)
+    print(serializer.data)
+    return Response("serializer.data", status=status.HTTP_200_OK)
+
 
 @api_view(['GET'])
 def CustomerList(request):
