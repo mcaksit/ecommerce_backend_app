@@ -1,65 +1,24 @@
-from typing import get_args
-from django.db.models.fields import NullBooleanField
-from django.http import JsonResponse
-from django.shortcuts import render
 from rest_framework import status
-from rest_framework.generics import ListAPIView
-from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from rest_framework.filters import SearchFilter, OrderingFilter
 from rest_framework.views import APIView
-from django.core import serializers
-from django.db.models import Q
 from django.http import Http404
+from django.contrib.auth.models import User
+from rest_framework.authtoken.models import Token
+from rest_framework import authentication, permissions
+from django.contrib.auth.mixins import PermissionRequiredMixin
+from rest_framework.decorators import api_view, authentication_classes, permission_classes
+from django.contrib.auth import login as django_login, logout as django_logout
 
 from .models import *
 from .serializers import *
-
-from rest_framework import authentication, permissions
-from django.contrib.auth.models import User
-from rest_framework.authtoken.views import ObtainAuthToken
-from rest_framework.authtoken.models import Token
-
-# class ListUsers(APIView):
-#     """
-#     View to list all users in the system.
-
-#     * Requires token authentication.
-#     * Only admin users are able to access this view.
-#     """
-#     authentication_classes = [authentication.TokenAuthentication]
-#     permission_classes = [permissions.IsAuthenticated]
-
-#     def get(self, request, format=None):
-#         """
-#         Return a list of all users.
-#         """
-#         usernames = [user.username for user in User.objects.all()]
-#         return Response(usernames)
-
-
-# class CustomAuthToken(ObtainAuthToken):
-
-#     def post(self, request, *args, **kwargs):
-#         serializer = self.serializer_class(data=request.data,
-#                                            context={'request': request})
-#         serializer.is_valid(raise_exception=True)
-#         user = serializer.validated_data['user']
-#         token, created = Token.objects.get_or_create(user=user)
-#         return Response({
-#             'token': token.key,
-#             'user_id': user.pk,
-#             'email': user.email
-#         })
-
-
 
 
 @api_view(['GET'])
 def apiOverview(request):
     api_urls = {
         'User Login':'user-login/',
-        'Token User Login':'get-token/ ("api/" yok basında)',
+        'User Logout':'user-logout/',
+        # 'Token Get':'get-token/ ("api/" yok basında)',
         'Customer List':'customer-list/',
         'Customer Details':'customer-detail/<str:pk>/',
         'Customer Create':'customer-create/',
@@ -76,7 +35,7 @@ def apiOverview(request):
         '!(Alternative) Products list':'list-products/',
         '!(Alternative) Products By Categories':'products/<slug:category_slug>/',
         '!(Alternative) Product Details':'products/<slug:category_slug>/<slug:product_slug>/',
-        'Cart Details':'view-cart/<int:pk>/',
+        # 'Cart Details':'view-cart/<int:pk>/',
         'Cart Products':'view-cart-products/<int:pk>/',
         'Add To Cart':'add-to-cart/',
         'Remove From Cart':'remove-from-cart/',
@@ -84,37 +43,68 @@ def apiOverview(request):
     return Response(api_urls)
 
 
-@api_view(['GET'])
-def UserDetail(request, name):
-    print(1)
-    try:
-        user = User.objects.get(username=name)
-    except User.DoesNotExist:
-        return Response(status=status.HTTP_404_NOT_FOUND)
-
-    print(2)
-    serializer = UserSerializer(user, context={'request': request})
-    print(3)
-    print(serializer.data)
-    return Response("serializer.data", status=status.HTTP_200_OK)
+class TokenLogin(APIView):
+    serializer_class = LoginSerializer
+    
+    def post(self, request):
+        serializer = LoginSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.validated_data["user"]
+        django_login(request, user)
+        token, created = Token.objects.get_or_create(user=user)
+        return_user = UserSerializer(user)
+        return Response({"token": token.key, "user": return_user.data}, status=status.HTTP_200_OK)
 
 
-@api_view(['GET'])
-def CustomerList(request):
-    customers = Customer.objects.all()
-    serializer = CustomerSerializer(customers, many=True)
-    return Response(serializer.data, status=status.HTTP_200_OK)
+class TokenLogout(APIView):
+    authentication_classes = [authentication.TokenAuthentication]
 
-@api_view(['GET'])
-def CustomerDetail(request, pk):
-    try:
-        customer = Customer.objects.get(id=pk)
-    except Customer.DoesNotExist:
-        return Response(status=status.HTTP_404_NOT_FOUND)
+    def post(self, request):
+        django_logout(request)
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
-    #Get Customer detail
-    serializer = CustomerSerializer(customer)
-    return Response(serializer.data, status=status.HTTP_200_OK)
+
+class UserDetail(PermissionRequiredMixin, APIView):
+    authentication_classes = [authentication.SessionAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
+    permission_required = 'api.add_cart'
+
+    def get(self, request, pk):
+        try:
+            user = User.objects.get(id=pk)
+        except User.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        serializer = UserSerializer(user, context={'request': request})
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class CustomerList(PermissionRequiredMixin, APIView):
+    authentication_classes = [authentication.SessionAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
+    permission_required = 'api.add_cart'
+
+    def get(self, request):
+        customers = Customer.objects.all()
+        serializer = CustomerSerializer(customers, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class CustomerDetail(PermissionRequiredMixin, APIView):
+    authentication_classes = [authentication.SessionAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
+    permission_required = 'api.add_cart'
+
+    def get(self, request, pk):
+        try:
+            customer = Customer.objects.get(id=pk)
+        except Customer.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        #Get Customer detail
+        serializer = CustomerSerializer(customer)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
        
 #Create customer
 @api_view(['POST'])
@@ -128,25 +118,27 @@ def CustomerCreate(request):
 
 
 #Customer Login
-@api_view(['POST'])
-def CustomerLogin(request):
-    email = request.data.get('email')
-    password = request.data.get('password')
+# @api_view(['POST'])
+# def CustomerLogin(request):
+#     email = request.data.get('email')
+#     password = request.data.get('password')
 
-    try:
-        customer_qs = Customer.objects.get(email=email)
-    except Customer.DoesNotExist:
-        return Response("User does not exist", status=status.HTTP_404_NOT_FOUND)    
+#     try:
+#         customer_qs = Customer.objects.get(email=email)
+#     except Customer.DoesNotExist:
+#         return Response("User does not exist", status=status.HTTP_404_NOT_FOUND)    
 
-    if password == customer_qs.password:
-        serializer = CustomerSerializerUpdate(customer_qs)
-        return Response(serializer.data, status=status.HTTP_200_OK)
-    else:
-        return Response("Entered wrong password!", status=status.HTTP_404_NOT_FOUND)
+#     if password == customer_qs.password:
+#         serializer = CustomerSerializerUpdate(customer_qs)
+#         return Response(serializer.data, status=status.HTTP_200_OK)
+#     else:
+#         return Response("Entered wrong password!", status=status.HTTP_404_NOT_FOUND)
     
 
 #Update a customer
 @api_view(['POST'])
+@authentication_classes([authentication.SessionAuthentication])
+@permission_classes([permissions.IsAuthenticated])
 def CustomerUpdate(request, pk):
     try:
         customer = Customer.objects.get(id=pk)
@@ -162,6 +154,8 @@ def CustomerUpdate(request, pk):
 
 #Delete a customer
 @api_view(['DELETE'])
+@authentication_classes([authentication.SessionAuthentication])
+@permission_classes([permissions.IsAuthenticated])
 def CustomerDelete(request, pk):
     try:
         customer = Customer.objects.get(id=pk)
@@ -214,40 +208,49 @@ def ProductDetail(request, pk):
     return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-@api_view(['POST'])
-def ProductCreate(request):
-    serializer = ProductSerializerUpdate(data=request.data)
+class ProductCreate(PermissionRequiredMixin, APIView):
+    authentication_classes = [authentication.TokenAuthentication]
+    permission_required = 'api.add_cart'
 
-    if serializer.is_valid():
-        serializer.save()
-        return Response(status=status.HTTP_201_CREATED)
-    return Response(serializer.data, status=status.HTTP_400_BAD_REQUEST)
+    def post(self, request):
+        serializer = ProductSerializerUpdate(data=request.data)
 
-
-@api_view(['POST'])
-def ProductUpdate(request, pk):
-    try:
-        product = Product.objects.get(id=pk)
-    except Product.DoesNotExist:
-        return Response(status=status.HTTP_404_NOT_FOUND)
-
-    serializer = ProductSerializerUpdate(instance=product, data=request.data, partial=True)
-
-    if serializer.is_valid():
-        serializer.save()
-        return Response(status=status.HTTP_201_CREATED)
-    return Response(serializer.data, status=status.HTTP_400_BAD_REQUEST)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(status=status.HTTP_201_CREATED)
+        return Response(serializer.data, status=status.HTTP_400_BAD_REQUEST)
 
 
-@api_view(['DELETE'])
-def ProductDelete(request, pk):
-    try:
-        product = Product.objects.get(id=pk)
-    except Product.DoesNotExist:
-        return Response(status=status.HTTP_404_NOT_FOUND)
-    
-    product.delete()
-    return Response(status=status.HTTP_204_NO_CONTENT)
+class ProductUpdate(PermissionRequiredMixin, APIView):
+    authentication_classes = [authentication.TokenAuthentication]
+    permission_required = 'api.add_cart'
+
+    def post(self, request, pk):
+        try:
+            product = Product.objects.get(id=pk)
+        except Product.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        serializer = ProductSerializerUpdate(instance=product, data=request.data, partial=True)
+
+        if serializer.is_valid():
+            serializer.save()
+            return Response(status=status.HTTP_201_CREATED)
+        return Response(serializer.data, status=status.HTTP_400_BAD_REQUEST)
+
+
+class ProductDelete(PermissionRequiredMixin, APIView):
+    authentication_classes = [authentication.TokenAuthentication]
+    permission_required = 'api.add_cart'
+
+    def delete(self, request, pk):
+        try:
+            product = Product.objects.get(id=pk)
+        except Product.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        
+        product.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class ProductsList(APIView):
@@ -281,128 +284,114 @@ class CategoryDetail(APIView):
         return Response(serializer.data)
         
 
-class CustomerCart2(APIView):
-    def get_object(self, pk):
-        try:
-            return Cart.objects.get(id=pk)
-        except CartItem.DoesNotExist:
-            raise Http404
+# class CustomerCart2(APIView):
+#     authentication_classes = [authentication.SessionAuthentication] #authentication.TokenAuthentication
+#     permission_classes = [permissions.IsAuthenticated]
 
-    def get(self, request, pk, format=None):
-        cart = self.get_object(pk)
-        serializer = CartSerializer(cart)
+#     def get_object(self, pk):
+#         try:
+#             return Cart.objects.get(id=pk)
+#         except CartItem.DoesNotExist:
+#             raise Http404
+
+#     def get(self, request, pk, format=None):
+#         cart = self.get_object(pk)
+#         serializer = CartSerializer(cart)
+#         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class CustomerCart(PermissionRequiredMixin, APIView):
+    authentication_classes = [authentication.TokenAuthentication]
+    permission_required = 'api.add_cart'
+
+    def get(self, request, pk):
+        try:
+            user = User.objects.get(id=pk)
+            cart, created = Cart.objects.get_or_create(customer=user.customer)
+            cartItems = CartItem.objects.filter(cart=cart.id)
+            item = Product.objects.get(id=str(cartItems[0].product.id))
+
+            items = []
+            cost = 0
+
+            for i in range(len(cartItems)):
+                item = Product.objects.get(id=str(cartItems[i].product.id))
+                items.append(item)
+                cost += item.price * cartItems[i].quantity
+
+        except Customer.DoesNotExist:
+            items = []
+
+        serializer = ProductSerializer(items, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-@api_view(['GET'])
-def CustomerCart(request, pk):
-    try:
-        customer = Customer.objects.get(id=pk)
-        print(customer)
-        cart, created = Cart.objects.get_or_create(customer=customer)
-        cartItems = CartItem.objects.filter(cart=cart.id)
-        item = Product.objects.get(id=str(cartItems[0].product.id))
+class AddToCart(PermissionRequiredMixin, APIView):
+    authentication_classes = [authentication.TokenAuthentication]
+    permission_required = 'api.add_cart'
 
-        items = []
-        cost = 0
+    def post(self, request):
+        user_id = request.data.get('user_id')
+        cartItem = request.data.get('cartItem')
 
-        for i in range(len(cartItems)):
-            item = Product.objects.get(id=str(cartItems[i].product.id))
-            items.append(item)
-            cost += item.price * cartItems[i].quantity
+        try:
+            user_qs = User.objects.get(id=user_id)
+            print(user_qs.customer)
+        except User.DoesNotExist:
+            return Response("User does not exist!", status=status.HTTP_404_NOT_FOUND)
 
-        #artifact = Artifact.objects.select_related().get(pk=pk)
-
-    except Customer.DoesNotExist:
-        items = []
-
-    serializer = ProductSerializer(items, many=True)
-    return Response(serializer.data, status=status.HTTP_200_OK)
-
-
-@api_view(['POST'])
-def AddToCart(request):
-    customer_id = request.data.get('customer_id')
-    cartItem = request.data.get('cartItem')
-
-    try:
-        customer_qs = Customer.objects.get(id=customer_id)
-    except Customer.DoesNotExist:
-        return Response("User does not exist!", status=status.HTTP_404_NOT_FOUND)
-
-    cart, created = Cart.objects.get_or_create(customer=customer_qs)
-    
-    try:
-        product = Product.objects.get(id=cartItem.get("product"))
-    except Product.DoesNotExist:
-        return Response("Product does not exist!", status=status.HTTP_404_NOT_FOUND) 
-
-
-    serializer = CartItemSerializer(data=cartItem)
-
-    if serializer.is_valid():
-        product = Product.objects.get(id=cartItem.get("product"))
-        if (product.stock - cartItem.get("quantity") >= 0):
-            product.stock = product.stock - cartItem.get("quantity")
-            cat = product.category
-            in_data = {
-                        "id": product.id,
-                        "name": product.name,
-                        "slug": product.slug,
-                        "image": product.image,
-                        "stock": product.stock,
-                        "price": product.price,
-                        "category": cat.id
-                    }
-            serializer2 = ProductSerializer(instance=product, data=in_data)
-            if serializer2.is_valid():
-                serializer2.save()
-            serializer.save(cart=cart)
-        else :
-            return Response("Product is out of stock!", status=status.HTTP_400_BAD_REQUEST)
+        cart, created = Cart.objects.get_or_create(customer=user_qs.customer)
         
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            product = Product.objects.get(id=cartItem.get("product"))
+        except Product.DoesNotExist:
+            return Response("Product does not exist!", status=status.HTTP_404_NOT_FOUND) 
 
 
-@api_view(['POST'])
-def RemoveFromCart(request):
-    customer_id = request.data.get('customer_id')
-    cartItem_id = request.data.get('cartItem_id')
+        serializer = CartItemSerializer(data=cartItem)
 
-    try:
-        customer_qs = Customer.objects.get(id=customer_id)
-    except Customer.DoesNotExist:
-        return Response("User does not exist!", status=status.HTTP_404_NOT_FOUND)
-
-    cart, created = Cart.objects.get_or_create(customer=customer_qs)
-    cartItems = CartItem.objects.filter(cart=cart.id)
-    
-    try:
-        cartItem = cartItems.get(id=cartItem_id)
-    except CartItem.DoesNotExist:
-        return Response("Item does not exist!", status=status.HTTP_404_NOT_FOUND) 
-
-    product = cartItem.product
-    product.stock = product.stock + cartItem.quantity
-    cat = product.category
-    in_data = {
-                "id": product.id,
-                "name": product.name,
-                "slug": product.slug,
-                "image": product.image,
-                "stock": product.stock,
-                "price": product.price,
-                "category": cat.id
-            }
-    serializer = ProductSerializerUpdate(instance=product, data=in_data)
-    if serializer.is_valid():
-        serializer.save()
-        cartItem.delete()
-    else:
+        if serializer.is_valid():
+            product = Product.objects.get(id=cartItem.get("product"))
+            cartItem2, created = CartItem.objects.get_or_create(cart=cart, product=product, defaults={'quantity': serializer.data.get("quantity")})
+            cartItem2.quantity = cartItem2.quantity + serializer.data.get("quantity")
+            if (product.stock - cartItem.get("quantity") >= 0):
+                product.stock = product.stock - cartItem.get("quantity")
+                product.save()
+                cartItem2.save()
+            else :
+                return Response("Product is out of stock or stock exceeded!", status=status.HTTP_400_BAD_REQUEST)
+            
+            return Response(status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
-    return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class RemoveFromCart(PermissionRequiredMixin, APIView):
+    authentication_classes = [authentication.TokenAuthentication]
+    permission_required = 'api.add_cart'
+
+    def post(self, request):
+        user_id = request.data.get('user_id')
+        cartItem_id = request.data.get('cartItem_id')
+
+        try:
+            user_qs = User.objects.get(id=user_id)
+        except User.DoesNotExist:
+            return Response("User does not exist!", status=status.HTTP_404_NOT_FOUND)
+
+        cart, created = Cart.objects.get_or_create(customer=user_qs.customer)
+        cartItems = CartItem.objects.filter(cart=cart.id)
+        
+        try:
+            cartItem = cartItems.get(id=cartItem_id)
+        except CartItem.DoesNotExist:
+            return Response("Item does not exist!", status=status.HTTP_404_NOT_FOUND) 
+
+        product = cartItem.product
+        product.stock = product.stock + cartItem.quantity
+        product.save()
+        cartItem.delete()
+        
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 @api_view(['GET'])
@@ -415,28 +404,32 @@ def ListReviews(request, pk):
     serializer = ReviewSerializer(reviews, many=True)
     return Response(serializer.data, status=status.HTTP_200_OK)
 
-@api_view(['POST'])
-def MakeReview(request):
-    try:
-        prod_id = request.data.get("product")
-        cust_id = request.data.get("customer")
-        cust = Customer.objects.get(id=cust_id)
-        prod = Product.objects.get(id=prod_id)
-        review, created = Review.objects.get_or_create(customer=cust, product=prod, defaults={'comment': request.data.get("comment"), 'stars': request.data.get("stars")})
-        review.comment = request.data.get("comment")
-        review.stars = request.data.get("stars")
-        review.save()
 
-        revs = Review.objects.filter(product=prod_id)
-        score_sum = 0
-        score_count = 0
-        for i in range(len(revs)):
-            if revs[i].stars:
-                score_sum += revs[i].stars
-                score_count += 1
-        prod.score = score_sum / score_count
-        prod.save()
+class MakeReview(PermissionRequiredMixin, APIView):
+    authentication_classes = [authentication.TokenAuthentication]
+    permission_required = 'api.add_cart'
 
-        return Response(status=status.HTTP_200_OK)
-    except:
-        return Response(status=status.HTTP_400_BAD_REQUEST)
+    def post(self, request):
+        try:
+            prod_id = request.data.get("product_id")
+            user_id = request.data.get("user_id")
+            user = User.objects.get(id=user_id)
+            prod = Product.objects.get(id=prod_id)
+            review, created = Review.objects.get_or_create(customer=user.customer, product=prod, defaults={'comment': request.data.get("comment"), 'stars': request.data.get("stars")})
+            review.comment = request.data.get("comment")
+            review.stars = request.data.get("stars")
+            review.save()
+
+            revs = Review.objects.filter(product=prod_id)
+            score_sum = 0
+            score_count = 0
+            for i in range(len(revs)):
+                if revs[i].stars:
+                    score_sum += revs[i].stars
+                    score_count += 1
+            prod.score = score_sum / score_count
+            prod.save()
+
+            return Response(status=status.HTTP_200_OK)
+        except:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
