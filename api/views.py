@@ -69,10 +69,9 @@ class TokenLogout(APIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-class UserDetail(PermissionRequiredMixin, APIView):
-    authentication_classes = [authentication.SessionAuthentication]
+class UserDetail(APIView):
+    authentication_classes = [authentication.TokenAuthentication]
     permission_classes = [permissions.IsAuthenticated]
-    permission_required = 'api.add_cart'
 
     def get(self, request, pk):
         try:
