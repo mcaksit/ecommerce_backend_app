@@ -69,6 +69,10 @@ class TokenLogout(APIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
+# class UserDetail(PermissionRequiredMixin, APIView):
+#     authentication_classes = [authentication.SessionAuthentication]
+#     permission_classes = [permissions.IsAuthenticated]
+#     permission_required = 'api.add_cart'
 class UserDetail(APIView):
     authentication_classes = [authentication.TokenAuthentication]
     permission_classes = [permissions.IsAuthenticated]
@@ -85,10 +89,13 @@ class UserDetail(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-class CustomerList(PermissionRequiredMixin, APIView):
-    authentication_classes = [authentication.SessionAuthentication]
+# class CustomerList(PermissionRequiredMixin, APIView):
+#     authentication_classes = [authentication.SessionAuthentication]
+#     permission_classes = [permissions.IsAuthenticated]
+#     permission_required = 'api.delete_cart'
+class CustomerList(APIView):
+    authentication_classes = [authentication.TokenAuthentication]
     permission_classes = [permissions.IsAuthenticated]
-    permission_required = 'api.delete_cart'
 
     def get(self, request):
         customers = Customer.objects.all()
@@ -96,10 +103,13 @@ class CustomerList(PermissionRequiredMixin, APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-class CustomerDetail(PermissionRequiredMixin, APIView):
-    authentication_classes = [authentication.SessionAuthentication]
+# class CustomerDetail(PermissionRequiredMixin, APIView):
+#     authentication_classes = [authentication.SessionAuthentication]
+#     permission_classes = [permissions.IsAuthenticated]
+#     permission_required = 'api.add_cart'
+class CustomerDetail(APIView):
+    authentication_classes = [authentication.TokenAuthentication]
     permission_classes = [permissions.IsAuthenticated]
-    permission_required = 'api.add_cart'
 
     def get(self, request, pk):
         try:
@@ -169,7 +179,8 @@ def UserCreate(request):
 
 #Update a customer
 @api_view(['POST'])
-@authentication_classes([authentication.SessionAuthentication])
+#@authentication_classes([authentication.SessionAuthentication])
+@authentication_classes([authentication.TokenAuthentication])
 @permission_classes([permissions.IsAuthenticated])
 def CustomerUpdate(request, pk):
     try:
@@ -185,9 +196,12 @@ def CustomerUpdate(request, pk):
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class UserUpdate(PermissionRequiredMixin, APIView):
+# class UserUpdate(PermissionRequiredMixin, APIView):
+#     authentication_classes = [authentication.TokenAuthentication]
+#     permission_required = 'api.add_cart'
+class UserUpdate(APIView):
     authentication_classes = [authentication.TokenAuthentication]
-    permission_required = 'api.add_cart'
+    permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request, pk):
         try:
@@ -220,7 +234,8 @@ class UserUpdate(PermissionRequiredMixin, APIView):
 
 #Delete a customer
 @api_view(['DELETE'])
-@authentication_classes([authentication.SessionAuthentication])
+#@authentication_classes([authentication.SessionAuthentication])
+@authentication_classes([authentication.TokenAuthentication])
 @permission_classes([permissions.IsAuthenticated])
 def CustomerDelete(request, pk):
     try:
@@ -232,9 +247,12 @@ def CustomerDelete(request, pk):
     return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-class UserDelete(PermissionRequiredMixin, APIView):
+# class UserDelete(PermissionRequiredMixin, APIView):
+#     authentication_classes = [authentication.TokenAuthentication]
+#     permission_required = 'api.add_cart'
+class UserDelete(APIView):
     authentication_classes = [authentication.TokenAuthentication]
-    permission_required = 'api.add_cart'
+    permission_classes = [permissions.IsAuthenticated]
 
     def delete(self, request, pk):
         try:
@@ -261,6 +279,7 @@ def ProductSearch(request, param):
     serializer = ProductSerializer(product, many=True)
     return Response(serializer.data, status=status.HTTP_200_OK)
 
+
 #Product search based on category
 @api_view(['GET'])
 def ProductCategoricalSearch(request, category, param):
@@ -280,6 +299,7 @@ def ProductList(request):
     serializer = ProductSerializer(products, many=True)
     return Response(serializer.data)
 
+
 @api_view(['GET'])
 def ProductDetail(request, pk):
     try:
@@ -291,9 +311,12 @@ def ProductDetail(request, pk):
     return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-class ProductCreate(PermissionRequiredMixin, APIView):
+# class ProductCreate(PermissionRequiredMixin, APIView):
+#     authentication_classes = [authentication.TokenAuthentication]
+#     permission_required = 'api.change_cart'
+class ProductCreate(APIView):
     authentication_classes = [authentication.TokenAuthentication]
-    permission_required = 'api.change_cart'
+    permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request):
         serializer = ProductSerializerUpdate(data=request.data)
@@ -304,9 +327,12 @@ class ProductCreate(PermissionRequiredMixin, APIView):
         return Response(serializer.data, status=status.HTTP_400_BAD_REQUEST)
 
 
-class ProductUpdate(PermissionRequiredMixin, APIView):
+# class ProductUpdate(PermissionRequiredMixin, APIView):
+#     authentication_classes = [authentication.TokenAuthentication]
+#     permission_required = 'api.change_cart'
+class ProductUpdate(APIView):
     authentication_classes = [authentication.TokenAuthentication]
-    permission_required = 'api.change_cart'
+    permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request, pk):
         try:
@@ -322,9 +348,12 @@ class ProductUpdate(PermissionRequiredMixin, APIView):
         return Response(serializer.data, status=status.HTTP_400_BAD_REQUEST)
 
 
-class ProductDelete(PermissionRequiredMixin, APIView):
+# class ProductDelete(PermissionRequiredMixin, APIView):
+#     authentication_classes = [authentication.TokenAuthentication]
+#     permission_required = 'api.change_cart'
+class ProductDelete(APIView):
     authentication_classes = [authentication.TokenAuthentication]
-    permission_required = 'api.change_cart'
+    permission_classes = [permissions.IsAuthenticated]
 
     def delete(self, request, pk):
         try:
@@ -342,6 +371,7 @@ class ProductsList(APIView):
         serializer = ProductSerializer(products, many=True)
         return Response(serializer.data)
 
+
 class ProductDetails(APIView):
     def get_object(self, category_slug, product_slug):
         try:
@@ -349,10 +379,12 @@ class ProductDetails(APIView):
         except Product.DoesNotExist:
             raise Http404
     
+
     def get(self, request, category_slug, product_slug, format=None):
         product = self.get_object(category_slug, product_slug)
         serializer = ProductSerializer(product)
         return Response(serializer.data)
+
 
 class CategoryDetail(APIView):
     def get_object(self, category_slug):
@@ -361,6 +393,7 @@ class CategoryDetail(APIView):
         except Product.DoesNotExist:
             raise Http404
     
+
     def get(self, request, category_slug, format=None):
         category = self.get_object(category_slug)
         serializer = CategorySerializer(category)
@@ -368,7 +401,7 @@ class CategoryDetail(APIView):
         
 
 class CustomerCart2(APIView):
-    authentication_classes = [authentication.SessionAuthentication] #authentication.TokenAuthentication
+    authentication_classes = [authentication.TokenAuthentication] #authentication.TokenAuthentication
     permission_classes = [permissions.IsAuthenticated]
 
     def get_object(self, pk):
@@ -383,10 +416,13 @@ class CustomerCart2(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-class CustomerCart(PermissionRequiredMixin, APIView):
-    authentication_classes = [authentication.SessionAuthentication]
+# class CustomerCart(PermissionRequiredMixin, APIView):
+#     authentication_classes = [authentication.SessionAuthentication]
+#     permission_classes = [permissions.IsAuthenticated]
+#     permission_required = 'api.add_cart'
+class CustomerCart(APIView):
+    authentication_classes = [authentication.TokenAuthentication]
     permission_classes = [permissions.IsAuthenticated]
-    permission_required = 'api.add_cart'
 
     def get(self, request, pk):
         try:
@@ -411,9 +447,12 @@ class CustomerCart(PermissionRequiredMixin, APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-class AddToCart(PermissionRequiredMixin, APIView):
+# class AddToCart(PermissionRequiredMixin, APIView):
+#     authentication_classes = [authentication.TokenAuthentication]
+#     permission_required = 'api.add_cart'
+class AddToCart(APIView):
     authentication_classes = [authentication.TokenAuthentication]
-    permission_required = 'api.add_cart'
+    permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request):
         user_id = request.data.get('user_id')
@@ -451,9 +490,12 @@ class AddToCart(PermissionRequiredMixin, APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class RemoveFromCart(PermissionRequiredMixin, APIView):
+# class RemoveFromCart(PermissionRequiredMixin, APIView):
+#     authentication_classes = [authentication.TokenAuthentication]
+#     permission_required = 'api.add_cart'
+class RemoveFromCart(APIView):
     authentication_classes = [authentication.TokenAuthentication]
-    permission_required = 'api.add_cart'
+    permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request):
         user_id = request.data.get('user_id')
@@ -493,9 +535,12 @@ def ListReviews(request, pk):
     return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-class MakeReview(PermissionRequiredMixin, APIView):
+# class MakeReview(PermissionRequiredMixin, APIView):
+#     authentication_classes = [authentication.TokenAuthentication]
+#     permission_required = 'api.add_cart'
+class MakeReview(APIView):
     authentication_classes = [authentication.TokenAuthentication]
-    permission_required = 'api.add_cart'
+    permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request):
         try:
