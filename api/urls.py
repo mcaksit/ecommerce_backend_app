@@ -6,7 +6,10 @@ urlpatterns = [
     #User api urls
     path('user-login/', views.TokenLogin.as_view()),
     path('user-logout/', views.TokenLogout.as_view()),
+    path('user-create/', views.UserCreate, name='user-create'),
+    path('user-update/<int:pk>/', views.UserUpdate.as_view()),
     path('user-detail/<int:pk>/', views.UserDetail.as_view()),
+    path('user-delete/<int:pk>/', views.UserDelete.as_view()),
     #Customer api urls
     path('customer-list/', views.CustomerList.as_view()),
     path('customer-detail/<int:pk>/', views.CustomerDetail.as_view()),
@@ -30,7 +33,7 @@ urlpatterns = [
     path('products/<slug:category_slug>/<slug:product_slug>/', views.ProductDetails.as_view()),
     path('products/<slug:category_slug>/', views.CategoryDetail.as_view()),
     #Cart api urls
-    #path('view-cart/<int:pk>/', views.CustomerCart2.as_view()),
+    path('view-cart/<int:pk>/', views.CustomerCart2.as_view()),
     path('view-cart-products/<int:pk>/', views.CustomerCart.as_view()),
     path('add-to-cart/', views.AddToCart.as_view()),
     path('remove-from-cart/', views.RemoveFromCart.as_view()),

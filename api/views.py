@@ -2,7 +2,7 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.http import Http404
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
 from rest_framework.authtoken.models import Token
 from rest_framework import authentication, permissions
 from django.contrib.auth.mixins import PermissionRequiredMixin
@@ -18,11 +18,16 @@ def apiOverview(request):
     api_urls = {
         'User Login':'user-login/',
         'User Logout':'user-logout/',
+        'User Create':'user-create/',
+        'User Update':'user-update/<str:pk>/',
+        'User Details':'user-detail/<str:pk>/',
+        'User Delete':'user-delete/<str:pk>/',
         # 'Token Get':'get-token/ ("api/" yok basında)',
         'Customer List':'customer-list/',
-        'Customer Details':'customer-detail/<str:pk>/',
         'Customer Create':'customer-create/',
         'Customer Update':'customer-update/<str:pk>/',
+        'Customer Details':'customer-detail/<str:pk>/',
+        'Customer Details':'customer-detail/<str:pk>/',
         'Customer Delete':'customer-delete/<str:pk>/',
         'Product List':'product-list/',
         'Product Search':'product/?search=<param>',
@@ -35,7 +40,7 @@ def apiOverview(request):
         '!(Alternative) Products list':'list-products/',
         '!(Alternative) Products By Categories':'products/<slug:category_slug>/',
         '!(Alternative) Product Details':'products/<slug:category_slug>/<slug:product_slug>/',
-        # 'Cart Details':'view-cart/<int:pk>/',
+        'Cart Details':'view-cart/<int:pk>/',
         'Cart Products':'view-cart-products/<int:pk>/',
         'Add To Cart':'add-to-cart/',
         'Remove From Cart':'remove-from-cart/',
@@ -72,6 +77,8 @@ class UserDetail(PermissionRequiredMixin, APIView):
     def get(self, request, pk):
         try:
             user = User.objects.get(id=pk)
+            if (request.user != user):
+                return Response(status=status.HTTP_401_UNAUTHORIZED)
         except User.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
@@ -82,7 +89,7 @@ class UserDetail(PermissionRequiredMixin, APIView):
 class CustomerList(PermissionRequiredMixin, APIView):
     authentication_classes = [authentication.SessionAuthentication]
     permission_classes = [permissions.IsAuthenticated]
-    permission_required = 'api.add_cart'
+    permission_required = 'api.delete_cart'
 
     def get(self, request):
         customers = Customer.objects.all()
@@ -108,6 +115,8 @@ class CustomerDetail(PermissionRequiredMixin, APIView):
        
 #Create customer
 @api_view(['POST'])
+@authentication_classes([])
+@permission_classes([])
 def CustomerCreate(request):
     serializer = CustomerSerializerUpdate(data=request.data)
 
@@ -115,6 +124,30 @@ def CustomerCreate(request):
         serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+#Create customer
+@api_view(['POST'])
+@authentication_classes([])
+@permission_classes([])
+def UserCreate(request):
+
+    if ((not(request.data.get('name')) or request.data.get('name') == "")
+        or (not(request.data.get('password')) or request.data.get('password') == "")
+        or (not(request.data.get('email')) or request.data.get('email') == "")
+        or (not(request.data.get('phone')) or request.data.get('phone') == "")):
+        return Response(status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        customersGroup = Group.objects.get(name='Customer')
+        createdUser = User.objects.create(username=request.data.get('name'), password=request.data.get('password'), email=request.data.get('email'))
+        customersGroup.user_set.add(createdUser)
+
+        Customer.objects.create(name=request.data.get('name'), phone=request.data.get('phone'), email=request.data.get('email'), user=createdUser)
+        serializer = UserSerializer(createdUser)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    except :
+        return Response(status=status.HTTP_400_BAD_REQUEST)
 
 
 #Customer Login
@@ -152,6 +185,40 @@ def CustomerUpdate(request, pk):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+
+class UserUpdate(PermissionRequiredMixin, APIView):
+    authentication_classes = [authentication.TokenAuthentication]
+    permission_required = 'api.add_cart'
+
+    def post(self, request, pk):
+        try:
+            user = User.objects.get(id=pk)
+            if (request.user != user):
+                return Response(status=status.HTTP_401_UNAUTHORIZED)
+            customer = Customer.objects.get(user=user)
+        except User.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        try:
+            if (request.data.get('name') and request.data.get('name') != ""):
+                user.name = request.data.get('name')
+                customer.name = request.data.get('name')
+            if (request.data.get('password') and request.data.get('password') != ""):
+                user.set_password(request.data.get('password'))
+            if (request.data.get('email') and request.data.get('email') != ""):
+                user.email = request.data.get('email')
+                customer.email = request.data.get('email')
+            if (request.data.get('phone') and request.data.get('phone') != ""):
+                customer.phone = request.data.get('phone')
+
+            user.save()
+            customer.save()
+            serializer = UserSerializer(user)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except :
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
+
 #Delete a customer
 @api_view(['DELETE'])
 @authentication_classes([authentication.SessionAuthentication])
@@ -164,6 +231,23 @@ def CustomerDelete(request, pk):
    
     customer.delete()    
     return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class UserDelete(PermissionRequiredMixin, APIView):
+    authentication_classes = [authentication.TokenAuthentication]
+    permission_required = 'api.add_cart'
+
+    def delete(self, request, pk):
+        try:
+            user = User.objects.get(id=pk)
+            if (request.user != user):
+                return Response(status=status.HTTP_401_UNAUTHORIZED)
+        except User.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+    
+        user.delete()    
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
 
 #Product APIs
 #Product search
@@ -210,7 +294,7 @@ def ProductDetail(request, pk):
 
 class ProductCreate(PermissionRequiredMixin, APIView):
     authentication_classes = [authentication.TokenAuthentication]
-    permission_required = 'api.add_cart'
+    permission_required = 'api.change_cart'
 
     def post(self, request):
         serializer = ProductSerializerUpdate(data=request.data)
@@ -223,7 +307,7 @@ class ProductCreate(PermissionRequiredMixin, APIView):
 
 class ProductUpdate(PermissionRequiredMixin, APIView):
     authentication_classes = [authentication.TokenAuthentication]
-    permission_required = 'api.add_cart'
+    permission_required = 'api.change_cart'
 
     def post(self, request, pk):
         try:
@@ -241,7 +325,7 @@ class ProductUpdate(PermissionRequiredMixin, APIView):
 
 class ProductDelete(PermissionRequiredMixin, APIView):
     authentication_classes = [authentication.TokenAuthentication]
-    permission_required = 'api.add_cart'
+    permission_required = 'api.change_cart'
 
     def delete(self, request, pk):
         try:
@@ -284,20 +368,20 @@ class CategoryDetail(APIView):
         return Response(serializer.data)
         
 
-# class CustomerCart2(APIView):
-#     authentication_classes = [authentication.SessionAuthentication] #authentication.TokenAuthentication
-#     permission_classes = [permissions.IsAuthenticated]
+class CustomerCart2(APIView):
+    authentication_classes = [authentication.SessionAuthentication] #authentication.TokenAuthentication
+    permission_classes = [permissions.IsAuthenticated]
 
-#     def get_object(self, pk):
-#         try:
-#             return Cart.objects.get(id=pk)
-#         except CartItem.DoesNotExist:
-#             raise Http404
+    def get_object(self, pk):
+        try:
+            return Cart.objects.get(id=pk)
+        except CartItem.DoesNotExist:
+            raise Http404
 
-#     def get(self, request, pk, format=None):
-#         cart = self.get_object(pk)
-#         serializer = CartSerializer(cart)
-#         return Response(serializer.data, status=status.HTTP_200_OK)
+    def get(self, request, pk, format=None):
+        cart = self.get_object(pk)
+        serializer = CartSerializer(cart)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class CustomerCart(PermissionRequiredMixin, APIView):
@@ -307,6 +391,8 @@ class CustomerCart(PermissionRequiredMixin, APIView):
     def get(self, request, pk):
         try:
             user = User.objects.get(id=pk)
+            if (request.user != user):
+                return Response(status=status.HTTP_401_UNAUTHORIZED)
             cart, created = Cart.objects.get_or_create(customer=user.customer)
             cartItems = CartItem.objects.filter(cart=cart.id)
             item = Product.objects.get(id=str(cartItems[0].product.id))
@@ -336,7 +422,8 @@ class AddToCart(PermissionRequiredMixin, APIView):
 
         try:
             user_qs = User.objects.get(id=user_id)
-            print(user_qs.customer)
+            if (request.user != user_qs):
+                return Response(status=status.HTTP_401_UNAUTHORIZED)
         except User.DoesNotExist:
             return Response("User does not exist!", status=status.HTTP_404_NOT_FOUND)
 
@@ -375,6 +462,8 @@ class RemoveFromCart(PermissionRequiredMixin, APIView):
 
         try:
             user_qs = User.objects.get(id=user_id)
+            if (request.user != user_qs):
+                return Response(status=status.HTTP_401_UNAUTHORIZED)
         except User.DoesNotExist:
             return Response("User does not exist!", status=status.HTTP_404_NOT_FOUND)
 
@@ -414,6 +503,9 @@ class MakeReview(PermissionRequiredMixin, APIView):
             prod_id = request.data.get("product_id")
             user_id = request.data.get("user_id")
             user = User.objects.get(id=user_id)
+            if (request.user != user):
+                return Response(status=status.HTTP_401_UNAUTHORIZED)
+                
             prod = Product.objects.get(id=prod_id)
             review, created = Review.objects.get_or_create(customer=user.customer, product=prod, defaults={'comment': request.data.get("comment"), 'stars': request.data.get("stars")})
             review.comment = request.data.get("comment")

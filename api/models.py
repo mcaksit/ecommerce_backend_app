@@ -5,7 +5,6 @@ from django.core.validators import MaxValueValidator, MinValueValidator
 
 # Create your models here.
 
-
 from django.conf import settings
 from django.db.models.signals import post_save
 from django.dispatch import receiver
@@ -46,7 +45,7 @@ class Customer(models.Model):
     user = models.OneToOneField(User, related_name='customer', on_delete=models.CASCADE, null=True, blank=True)
     #role = models.CharField(choices=ROLE_CHOICES, max_length=255)
     name = models.CharField(max_length=255)
-    password = models.CharField(max_length=255)
+    #password = models.CharField(max_length=255)
     phone = models.CharField(max_length=255)
     email = models.CharField(max_length=255, unique=True)
     date_created = models.DateTimeField(default=timezone.now)
@@ -85,7 +84,6 @@ class Product(models.Model):
         ordering = ('-date_created',)
 
     def __str__(self):
-        #return "{" + "name:{0} , image:{1} , price:{2} , category:{3} , score:{4}".format(self.name, self.image, self.price, self.category, self.score) + "}"
         return self.name
 
     def get_absolute_url(self):
