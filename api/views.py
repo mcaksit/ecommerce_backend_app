@@ -385,7 +385,8 @@ class CustomerCart2(APIView):
 
 
 class CustomerCart(PermissionRequiredMixin, APIView):
-    authentication_classes = [authentication.TokenAuthentication]
+    authentication_classes = [authentication.SessionAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
     permission_required = 'api.add_cart'
 
     def get(self, request, pk):
@@ -395,7 +396,6 @@ class CustomerCart(PermissionRequiredMixin, APIView):
                 return Response(status=status.HTTP_401_UNAUTHORIZED)
             cart, created = Cart.objects.get_or_create(customer=user.customer)
             cartItems = CartItem.objects.filter(cart=cart.id)
-            item = Product.objects.get(id=str(cartItems[0].product.id))
 
             items = []
             cost = 0
@@ -405,7 +405,7 @@ class CustomerCart(PermissionRequiredMixin, APIView):
                 items.append(item)
                 cost += item.price * cartItems[i].quantity
 
-        except Customer.DoesNotExist:
+        except User.DoesNotExist:
             items = []
 
         serializer = ProductSerializer(items, many=True)
@@ -505,7 +505,7 @@ class MakeReview(PermissionRequiredMixin, APIView):
             user = User.objects.get(id=user_id)
             if (request.user != user):
                 return Response(status=status.HTTP_401_UNAUTHORIZED)
-                
+
             prod = Product.objects.get(id=prod_id)
             review, created = Review.objects.get_or_create(customer=user.customer, product=prod, defaults={'comment': request.data.get("comment"), 'stars': request.data.get("stars")})
             review.comment = request.data.get("comment")
