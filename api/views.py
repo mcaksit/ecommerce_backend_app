@@ -437,11 +437,11 @@ class CustomerCart(APIView):
 
     def get(self, request, pk):
         try:
-            customer = Customer.objects.get(id=pk)
-            #if (request.user != user):
-            #    return Response(status=status.HTTP_401_UNAUTHORIZED)
-            cart, created = Cart.objects.get_or_create(customer=customer)
-            """cartItems = CartItem.objects.filter(cart=cart.id)
+            user = User.objects.get(id=pk)
+            if (request.user != user):
+                return Response(status=status.HTTP_401_UNAUTHORIZED)
+            cart, created = Cart.objects.get_or_create(customer=user.customer)
+            cartItems = CartItem.objects.filter(cart=cart.id)
 
             items = []
             cost = 0
@@ -449,13 +449,13 @@ class CustomerCart(APIView):
             for i in range(len(cartItems)):
                 item = Product.objects.get(id=str(cartItems[i].product.id))
                 items.append(item)
-                cost += item.price * cartItems[i].quantity"""
+                cost += item.price * cartItems[i].quantity
+
         except User.DoesNotExist:
             items = []
 
-        serializer = CartSerializer(cart)
+        serializer = ProductSerializer(items, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
-
 
 # class AddToCart(PermissionRequiredMixin, APIView):
 #     authentication_classes = [authentication.TokenAuthentication]
@@ -565,7 +565,8 @@ class MakeReview(APIView):
             
             review, created = Review.objects.get_or_create(customer=user.customer, product=prod, defaults={'comment': request.data.get("comment"), 'stars': request.data.get("stars")})
             review.comment = request.data.get("comment")
-            review.stars = request.data.get("stars")           
+            review.stars = request.data.get("stars")
+            review.approval_status = False           
             review.save()
             
             revs = Review.objects.filter(product=prod_id)
@@ -643,12 +644,28 @@ class OrderList(APIView):
 
     def get(self, request):
         try:
-            orders = Order_v2.objects.filter(Status="Not Completed")
+            orders = Order_v2.objects.filter(Status="Processing")
         except Order_v2.DoesNotExist:
-                return Response(status=status.HTTP_404_NOT_FOUND)
+            return Response(status=status.HTTP_404_NOT_FOUND)
 
         serializer = OrderSerializer(orders, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+class OrderCheckout(APIView):
+    authentication_classes=[authentication.TokenAuthentication]
+    permission_classes=[permissions.IsAuthenticated]  
+
+    def get(self, request, pk):
+        try:
+            orders = Order_v2.objects.get(id=pk)
+            order_item.Status= "Processing"
+            order_item.save()
+
+        except Order_v2.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        return Response(status=status.HTTP_200_OK)
+
 
 #Update order to become completed
 class OrderUpdate(APIView):
@@ -658,7 +675,7 @@ class OrderUpdate(APIView):
     def get(self, request, pk):
         try:
             order_item = Order_v2.objects.get(id=pk)
-            order_item.Status= "Completed"
+            order_item.Status= "Delivered"
             order_item.save()
         except Order_v2.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
