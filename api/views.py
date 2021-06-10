@@ -1,13 +1,19 @@
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from django.http import Http404
+from django.http import Http404, HttpResponse
 from django.contrib.auth.models import User, Group
 from rest_framework.authtoken.models import Token
 from rest_framework import authentication, permissions
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
 from django.contrib.auth import login as django_login, logout as django_logout
+from django import template
+
+import datetime
+from django.template.loader import render_to_string
+from weasyprint import HTML
+import tempfile
 
 from .models import *
 from .serializers import *
@@ -44,6 +50,11 @@ def apiOverview(request):
         'Cart Products':'view-cart-products/<int:pk>/',
         'Add To Cart':'add-to-cart/',
         'Remove From Cart':'remove-from-cart/',
+        'Export Invoices as Downloadable PDF File':'export-pdf/<str:range>/',
+        'Create Discount':'create-discount/',
+        'List Orders':'order-list/',
+        'Update Order':'order-update/<int:pk>/',
+        'Approve Review':'review-approval/<int:pk>/',
     }
     return Response(api_urls)
 
@@ -426,11 +437,11 @@ class CustomerCart(APIView):
 
     def get(self, request, pk):
         try:
-            user = User.objects.get(id=pk)
-            if (request.user != user):
-                return Response(status=status.HTTP_401_UNAUTHORIZED)
-            cart, created = Cart.objects.get_or_create(customer=user.customer)
-            cartItems = CartItem.objects.filter(cart=cart.id)
+            customer = Customer.objects.get(id=pk)
+            #if (request.user != user):
+            #    return Response(status=status.HTTP_401_UNAUTHORIZED)
+            cart, created = Cart.objects.get_or_create(customer=customer)
+            """cartItems = CartItem.objects.filter(cart=cart.id)
 
             items = []
             cost = 0
@@ -438,12 +449,11 @@ class CustomerCart(APIView):
             for i in range(len(cartItems)):
                 item = Product.objects.get(id=str(cartItems[i].product.id))
                 items.append(item)
-                cost += item.price * cartItems[i].quantity
-
+                cost += item.price * cartItems[i].quantity"""
         except User.DoesNotExist:
             items = []
 
-        serializer = ProductSerializer(items, many=True)
+        serializer = CartSerializer(cart)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
@@ -527,7 +537,7 @@ class RemoveFromCart(APIView):
 @api_view(['GET'])
 def ListReviews(request, pk):
     try:
-        reviews = Review.objects.filter(product=pk)
+        reviews = Review.objects.filter(product=pk)        
     except Review.DoesNotExist:
         return Response(status=status.HTTP_404_NOT_FOUND)
 
@@ -547,15 +557,17 @@ class MakeReview(APIView):
             prod_id = request.data.get("product_id")
             user_id = request.data.get("user_id")
             user = User.objects.get(id=user_id)
+            
             if (request.user != user):
-                return Response(status=status.HTTP_401_UNAUTHORIZED)
+               return Response(status=status.HTTP_401_UNAUTHORIZED)
 
             prod = Product.objects.get(id=prod_id)
+            
             review, created = Review.objects.get_or_create(customer=user.customer, product=prod, defaults={'comment': request.data.get("comment"), 'stars': request.data.get("stars")})
             review.comment = request.data.get("comment")
-            review.stars = request.data.get("stars")
+            review.stars = request.data.get("stars")           
             review.save()
-
+            
             revs = Review.objects.filter(product=prod_id)
             score_sum = 0
             score_count = 0
@@ -569,3 +581,131 @@ class MakeReview(APIView):
             return Response(status=status.HTTP_200_OK)
         except:
             return Response(status=status.HTTP_400_BAD_REQUEST)
+
+
+class ExportPDF(APIView):
+    authentication_classes=[authentication.TokenAuthentication]
+    permission_classes=[permissions.IsAuthenticated]  
+
+    def get(self,request,range):
+        response = HttpResponse(content_type='application/pdf')
+        response['Content-Disposition'] = 'inline; attachment; filename=Invoices'+ str(datetime.datetime.now())+'.pdf'
+        response['Content-Transfer-Encoding'] = 'binary'
+        dates= range.split(':')
+        
+        orders=Order_v2.objects.filter(date_ordered__range=[dates[0], dates[1]])
+        items=OrderItem_v2.objects.filter(date_added__range=[dates[0], dates[1]])
+        address=ShippingAddress.objects.all()
+
+        pricesums=[]
+        for order in orders:
+            price_sum=0
+            for item in items:
+                if item.order == order:
+                    price_sum = price_sum + (item.quantity*item.product.price) 
+            pricesums.append((order,price_sum))
+        print(pricesums)
+        
+        html_string = render_to_string('new-testing.html',{'orders':pricesums,'items':items, 'address':address,'dates':dates})
+        html=HTML(string=html_string)
+        
+        result=html.write_pdf()
+
+        with tempfile.NamedTemporaryFile(delete=True) as output:
+            output.write(result)
+            output.flush()        
+            output.seek(0)
+            response.write(output.read())
+        
+        return response
+
+class CreateDiscount(APIView):
+    authentication_classes=[authentication.TokenAuthentication]
+    permission_classes=[permissions.IsAuthenticated]  
+
+    def post(self, request):
+        try:
+            product_ids = request.data.get("product_id")
+            discount_amount = request.data.get("discount")    
+            for prod_id in product_ids:
+                product = Product.objects.get(id=prod_id)
+                product.price = (product.price * (100-discount_amount)) / 100 
+                product.save() 
+            
+            return Response(status=status.HTTP_200_OK)     
+        except:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
+
+class OrderList(APIView):
+    authentication_classes=[authentication.TokenAuthentication]
+    permission_classes=[permissions.IsAuthenticated]  
+
+    def get(self, request):
+        try:
+            orders = Order_v2.objects.filter(Status="Not Completed")
+        except Order_v2.DoesNotExist:
+                return Response(status=status.HTTP_404_NOT_FOUND)
+
+        serializer = OrderSerializer(orders, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+#Update order to become completed
+class OrderUpdate(APIView):
+    authentication_classes=[authentication.TokenAuthentication]
+    permission_classes=[permissions.IsAuthenticated]  
+    
+    def get(self, request, pk):
+        try:
+            order_item = Order_v2.objects.get(id=pk)
+            order_item.Status= "Completed"
+            order_item.save()
+        except Order_v2.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        return Response(status=status.HTTP_200_OK)
+
+#Delete review if not approved 
+class ApproveReview(APIView):
+    authentication_classes=[authentication.TokenAuthentication]
+    permission_classes=[permissions.IsAuthenticated]  
+
+    def get(self,request,pk):
+        try:
+            review_item = Review.objects.get(id=pk)
+            review_item.delete()            
+        except Review.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        return Response(status=status.HTTP_200_OK)
+
+class MakeRefund(APIView):
+    authentication_classes=[authentication.TokenAuthentication]
+    permission_classes=[permissions.IsAuthenticated]  
+
+    def get(self,request,pk):
+        try:
+            order_item = Order_v2.Objects.get(id=pk)
+            order_item.Status = "Refunded"
+            order_item.save()
+        except Order_v2.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        return Response(status=status.HTTP_200_OK)
+
+class RequestRefund(APIView):
+    authentication_classes=[authentication.TokenAuthentication]
+    permission_classes=[permissions.IsAuthenticated]
+
+    def get(self,request,pk):
+        try:
+            order_item = Order_v2.Objects.get(id=pk)
+            if(order_item.Status == "Completed"):
+                order_item.Status = "Customer requests refund"
+                order_item.save()
+            else:
+                return Response("Item Cannot be refunded",status=status.HTTP_400_BAD_REQUEST)
+        except Order_v2.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        return Response(status=status.HTTP_200_OK)
