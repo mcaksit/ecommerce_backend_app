@@ -82,13 +82,13 @@ class OrderSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Order_v2
-        fields = '_all__'#['transaction_id','Status','date_ordered','address','orderItems','customer']
+        fields = '__all__'#['transaction_id','Status','date_ordered','address','orderItems','customer']
         
 
 class CartItemSerializer(serializers.ModelSerializer):
     class Meta:
         model = CartItem
-        fields = ['product','quantity','date_added']
+        fields = '__all__'
 
 
 class CartSerializer(serializers.ModelSerializer):
