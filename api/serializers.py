@@ -106,9 +106,9 @@ class CategorySerializer(serializers.ModelSerializer):
 
 
 class CustomerSerializer(serializers.ModelSerializer):
-    cart = CartSerializer(many=True)
+    CartOwner = CartSerializer(many=True)
     orders = OrderSerializer(many=True)
-    
+
     class Meta:
         model = Customer
         # fields = '__all__'
