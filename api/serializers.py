@@ -77,12 +77,13 @@ class OrderItemSerializer(serializers.ModelSerializer):
 
 
 class OrderSerializer(serializers.ModelSerializer):
-    #address = serializers.StringRelatedField(many=True)
-
+    orderItems = OrderItemSerializer(many=True)
+    address = ShippingAddressSerializer(many=True)
+    
     class Meta:
         model = Order_v2
-        fields = ['transaction_id','Status','date_ordered','address','orderItems','customer']
-        depth = 1
+        fields = '_all__'#['transaction_id','Status','date_ordered','address','orderItems','customer']
+        
 
 class CartItemSerializer(serializers.ModelSerializer):
     class Meta:
