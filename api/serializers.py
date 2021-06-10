@@ -106,7 +106,7 @@ class CategorySerializer(serializers.ModelSerializer):
 
 
 class CustomerSerializer(serializers.ModelSerializer):
-    CartOwner = CartSerializer(many=True)
+    cart = CartSerializer(many=True)
     orders = OrderSerializer(many=True)
 
     class Meta:
