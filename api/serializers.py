@@ -49,6 +49,7 @@ class ShippingAddressSerializer(serializers.ModelSerializer):
 
 
 class ReviewSerializer(serializers.ModelSerializer):
+    customer = serializers.StringRelatedField(read_only=True)
     class Meta:
         model = Review
         fields = '__all__'
@@ -56,7 +57,6 @@ class ReviewSerializer(serializers.ModelSerializer):
 
 class ProductSerializer(serializers.ModelSerializer):
     reviews = ReviewSerializer(many=True)
-
     class Meta:
         model = Product
         fields = '__all__'
@@ -68,7 +68,7 @@ class ProductSerializerUpdate(serializers.ModelSerializer):
         fields = '__all__'
 
 class OrderItemSerializer(serializers.ModelSerializer):
-    #products = ProductSerializer(many=True)
+    product = serializers.PrimaryKeyRelatedField(many=True,read_only=True)
 
     class Meta:
         model = OrderItem_v2
@@ -76,28 +76,24 @@ class OrderItemSerializer(serializers.ModelSerializer):
 
 
 class OrderSerializer(serializers.ModelSerializer):
-    orderItems = OrderItemSerializer(many=True)
-    address = ShippingAddressSerializer(many=True)
+    #address = serializers.StringRelatedField(many=True)
 
     class Meta:
         model = Order_v2
-        fields = '__all__'
-
+        fields = ['transaction_id','Status','date_ordered','address','orderItems','customer']
+        depth = 1
 
 class CartItemSerializer(serializers.ModelSerializer):
-    #products = ProductSerializer()
-
     class Meta:
         model = CartItem
-        fields = '__all__'
+        fields = ['product','quantity','date_added']
 
 
 class CartSerializer(serializers.ModelSerializer):
-    cartItems = CartItemSerializer(many=True)
-
     class Meta:
         model = Cart
-        fields = '__all__'
+        fields = ['transaction_id','completed','cartItems','customer']
+        depth=2
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -109,9 +105,7 @@ class CategorySerializer(serializers.ModelSerializer):
 
 
 class CustomerSerializer(serializers.ModelSerializer):
-    cart = CartSerializer(many=True)
-    orders = OrderSerializer(many=True)
-
+    
     class Meta:
         model = Customer
         # fields = '__all__'
