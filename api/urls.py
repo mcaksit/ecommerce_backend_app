@@ -10,6 +10,7 @@ urlpatterns = [
     path('user-update/<int:pk>/', views.UserUpdate.as_view()),
     path('user-detail/<int:pk>/', views.UserDetail.as_view()),
     path('user-delete/<int:pk>/', views.UserDelete.as_view()),
+    path('user-checkout/<int:pk>/', views.UserCheckout.as_view()),
     #Customer api urls
     path('customer-list/', views.CustomerList.as_view()),
     path('customer-detail/<int:pk>/', views.CustomerDetail.as_view()),

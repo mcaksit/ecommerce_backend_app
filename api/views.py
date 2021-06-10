@@ -22,6 +22,7 @@ def apiOverview(request):
         'User Update':'user-update/<str:pk>/',
         'User Details':'user-detail/<str:pk>/',
         'User Delete':'user-delete/<str:pk>/',
+        'User Checkout':'user-checkout/<int:pk>/',
         # 'Token Get':'get-token/ ("api/" yok basında)',
         'Customer List':'customer-list/',
         'Customer Create':'customer-create/',
@@ -150,6 +151,7 @@ def UserCreate(request):
     try:
         customersGroup = Group.objects.get(name='Customer')
         createdUser = User.objects.create(username=request.data.get('name'), password=request.data.get('password'), email=request.data.get('email'))
+        createdUser.set_password(request.data.get('password'))
         customersGroup.user_set.add(createdUser)
 
         Customer.objects.create(name=request.data.get('name'), phone=request.data.get('phone'), email=request.data.get('email'), user=createdUser)
@@ -214,7 +216,7 @@ class UserUpdate(APIView):
 
         try:
             if (request.data.get('name') and request.data.get('name') != ""):
-                user.name = request.data.get('name')
+                user.username = request.data.get('name')
                 customer.name = request.data.get('name')
             if (request.data.get('password') and request.data.get('password') != ""):
                 user.set_password(request.data.get('password'))
@@ -478,7 +480,8 @@ class AddToCart(APIView):
         if serializer.is_valid():
             product = Product.objects.get(id=cartItem.get("product"))
             cartItem2, created = CartItem.objects.get_or_create(cart=cart, product=product, defaults={'quantity': serializer.data.get("quantity")})
-            cartItem2.quantity = cartItem2.quantity + serializer.data.get("quantity")
+            if (created == False):
+                cartItem2.quantity = cartItem2.quantity + serializer.data.get("quantity")
             if (product.stock - cartItem.get("quantity") >= 0):
                 product.stock = product.stock - cartItem.get("quantity")
                 product.save()
@@ -569,3 +572,33 @@ class MakeReview(APIView):
             return Response(status=status.HTTP_200_OK)
         except:
             return Response(status=status.HTTP_400_BAD_REQUEST)
+
+
+class UserCheckout(APIView):
+    authentication_classes = [authentication.TokenAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, pk):
+        try:
+            user = User.objects.get(id=pk)
+            if (request.user != user):
+                return Response(status=status.HTTP_401_UNAUTHORIZED)
+        except User.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        cart = Cart.objects.get(customer=Customer.objects.get(user=user))
+
+        order = Order_v2.objects.create(customer=cart.customer, transaction_id=cart.transaction_id, Status="Processing")
+
+        shippingAddress = ShippingAddress.objects.create(customer=order.customer, order=order, city=request.data.get("city"),
+        district=request.data.get("district"), full_address=request.data.get("full_address"))
+
+        cartItems = CartItem.objects.filter(cart=cart)
+        for i in range(len(cartItems)):
+            orderItem = OrderItem_v2.objects.create(product=cartItems[i].product,
+             order=order, quantity=cartItems[i].quantity, date_added=cartItems[i].date_added)
+
+        for i in range(len(cartItems)):
+            cartItems[i].delete()
+
+        return Response(status=status.HTTP_200_OK)
