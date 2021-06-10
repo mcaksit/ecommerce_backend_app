@@ -50,7 +50,7 @@ def apiOverview(request):
         'Cart Products':'view-cart-products/<int:pk>/',
         'Add To Cart':'add-to-cart/',
         'Remove From Cart':'remove-from-cart/',
-        'Export Invoices as Downloadable PDF File':'export-pdf/<str:range>/',
+        #'Export Invoices as Downloadable PDF File':'export-pdf/<str:range>/',
         'Create Discount':'create-discount/',
         'List Orders':'order-list/',
         'Update Order':'order-update/<int:pk>/',
