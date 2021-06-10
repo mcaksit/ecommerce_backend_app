@@ -92,10 +92,11 @@ class CartItemSerializer(serializers.ModelSerializer):
 
 
 class CartSerializer(serializers.ModelSerializer):
+    cartItems = CartItemSerializer(many=True)
+
     class Meta:
         model = Cart
-        fields = ['transaction_id','completed','cartItems','customer']
-        depth=2
+        fields = '__all__'
 
 
 class CategorySerializer(serializers.ModelSerializer):
