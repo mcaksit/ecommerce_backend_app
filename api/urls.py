@@ -37,4 +37,11 @@ urlpatterns = [
     path('view-cart-products/<int:pk>/', views.CustomerCart.as_view()),
     path('add-to-cart/', views.AddToCart.as_view()),
     path('remove-from-cart/', views.RemoveFromCart.as_view()),
+    #Manager api urls
+    path('export-pdf/<str:range>/', views.ExportPDF.as_view()),
+    path('create-discount/',views.CreateDiscount.as_view()),
+    path('order-list/', views.OrderList.as_view()),
+    path('order-update/<int:pk>/', views.OrderUpdate.as_view()),
+    path('review-approval/<int:pk>/', views.ApproveReview.as_view()),
+    
 ]
