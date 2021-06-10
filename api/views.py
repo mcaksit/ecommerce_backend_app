@@ -12,7 +12,7 @@ from django import template
 
 import datetime
 from django.template.loader import render_to_string
-from weasyprint import HTML
+#from weasyprint import HTML
 import tempfile
 
 from .models import *
