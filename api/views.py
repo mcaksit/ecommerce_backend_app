@@ -711,10 +711,10 @@ class OrderUpdate(APIView):
     authentication_classes=[authentication.TokenAuthentication]
     permission_classes=[permissions.IsAuthenticated]  
     
-    def get(self, request, pk):
+    def post(self, request, pk):
         try:
             order_item = Order_v2.objects.get(id=pk)
-            order_item.Status= "Delivered"
+            order_item.Status= request.data.get("status")
             order_item.save()
         except Order_v2.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
