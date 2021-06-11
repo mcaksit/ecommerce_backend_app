@@ -69,7 +69,7 @@ class ProductSerializerUpdate(serializers.ModelSerializer):
         fields = '__all__'
 
 class OrderItemSerializer(serializers.ModelSerializer):
-    product = serializers.PrimaryKeyRelatedField(many=True,read_only=True)
+    product = serializers.PrimaryKeyRelatedField(many=False,read_only=True)
 
     class Meta:
         model = OrderItem_v2
