@@ -684,20 +684,20 @@ class OrderList(APIView):
         serializer = OrderSerializer(orders, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-class OrderCheckout(APIView):
-    authentication_classes=[authentication.TokenAuthentication]
-    permission_classes=[permissions.IsAuthenticated]  
+# class OrderCheckout(APIView):
+#     authentication_classes=[authentication.TokenAuthentication]
+#     permission_classes=[permissions.IsAuthenticated]  
 
-    def get(self, request, pk):
-        try:
-            orders = Order_v2.objects.get(id=pk)
-            order_item.Status= "Processing"
-            order_item.save()
+#     def get(self, request, pk):
+#         try:
+#             orders = Order_v2.objects.get(id=pk)
+#             order_item.Status= "Processing"
+#             order_item.save()
 
-        except Order_v2.DoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND)
+#         except Order_v2.DoesNotExist:
+#             return Response(status=status.HTTP_404_NOT_FOUND)
 
-        return Response(status=status.HTTP_200_OK)
+#         return Response(status=status.HTTP_200_OK)
 
 
 #Update order to become completed
