@@ -571,7 +571,8 @@ class MakeReview(APIView):
 
             prod = Product.objects.get(id=prod_id)
             
-            review, created = Review.objects.get_or_create(customer=user.customer, product=prod, defaults={'comment': request.data.get("comment"), 'stars': request.data.get("stars")})
+            review, created = Review.objects.get_or_create(customer=user.customer, product=prod, defaults={'comment': request.data.get("comment"), 
+            'stars': request.data.get("stars")}, approval_status=False)
             review.comment = request.data.get("comment")
             review.stars = request.data.get("stars")
             review.approval_status = False           
