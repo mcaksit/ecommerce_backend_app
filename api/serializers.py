@@ -70,7 +70,7 @@ class ProductSerializerUpdate(serializers.ModelSerializer):
 
 class OrderItemSerializer(serializers.ModelSerializer):
     product = serializers.PrimaryKeyRelatedField(many=False,read_only=True)
-
+    #comment
     class Meta:
         model = OrderItem_v2
         fields = '__all__'
