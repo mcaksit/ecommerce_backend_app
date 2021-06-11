@@ -49,4 +49,5 @@ urlpatterns = [
     path('make-refund/<int:pk>/', views.MakeRefund.as_view()),
     path('request-refund/<int:pk>/', views.RequestRefund.as_view()),
     path('review-list/', views.ReviewList.as_view()),
+    path('refund-list/', views.RefundList.as_view()),
 ]

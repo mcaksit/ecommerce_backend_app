@@ -61,6 +61,7 @@ def apiOverview(request):
         'Make Refund':'make-refund/<int:pk>/',
         'Request Refund':'request-refund/<int:pk>/',
         'Review List':'review-list/',
+        'Refund List':'refund-list/',
     }
     return Response(api_urls)
 
@@ -806,4 +807,13 @@ class ReviewList(APIView):
     def get(self,request):
         revs = Review.objects.all()
         serializer = ReviewSerializer(revs, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+class RefundList(APIView):
+    authentication_classes=[authentication.TokenAuthentication]
+    permission_classes=[permissions.IsAuthenticated]
+
+    def get(self,request):
+        orders = Order_v2.objects.filter(Status="Refunded")
+        serializer = OrderSerializer(orders, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
