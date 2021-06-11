@@ -789,8 +789,8 @@ class CheckUserAdmin(APIView):
             customersGroup = Group.objects.get(name='Customer')
             if (request.user.groups.all()):
                 if (request.user.groups.all()[0] == customersGroup):
-                    return Response(status=status.HTTP_403_FORBIDDEN)
-                return Response(status=status.HTTP_200_OK)
-            return Response(status=status.HTTP_200_OK)
+                    return Response(0, status=status.HTTP_200_OK)
+                return Response(1,status=status.HTTP_200_OK)
+            return Response(1,status=status.HTTP_200_OK)
         except User.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
