@@ -60,6 +60,7 @@ def apiOverview(request):
         'Order Detail':'order-detail/<int:pk>/',
         'Make Refund':'make-refund/<int:pk>/',
         'Request Refund':'request-refund/<int:pk>/',
+        'Review List':'review-list/',
     }
     return Response(api_urls)
 
@@ -545,7 +546,7 @@ class RemoveFromCart(APIView):
 @api_view(['GET'])
 def ListReviews(request, pk):
     try:
-        reviews = Review.objects.filter(product=pk)        
+        reviews = Review.objects.filter(product=pk, approval_status=True)        
     except Review.DoesNotExist:
         return Response(status=status.HTTP_404_NOT_FOUND)
 
@@ -727,7 +728,8 @@ class ApproveReview(APIView):
     def get(self,request,pk):
         try:
             review_item = Review.objects.get(id=pk)
-            review_item.delete()            
+            review_item.approval_status = True     
+            review_item.save()       
         except Review.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
@@ -795,3 +797,13 @@ class CheckUserAdmin(APIView):
             return Response(1,status=status.HTTP_200_OK)
         except User.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
+
+
+class ReviewList(APIView):
+    authentication_classes=[authentication.TokenAuthentication]
+    permission_classes=[permissions.IsAuthenticated]
+
+    def get(self,request):
+        revs = Review.objects.all()
+        serializer = ReviewSerializer(revs, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
