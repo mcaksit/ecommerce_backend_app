@@ -142,7 +142,7 @@ class Order_v2(models.Model):
 
 
 class OrderItem_v2(models.Model):
-    product = models.ForeignKey(Product, on_delete=models.SET_NULL, null=True, blank=True)
+    product = models.ForeignKey(Product, related_name = 'product', on_delete=models.SET_NULL,  null=True, blank=True)
     order = models.ForeignKey(Order_v2, related_name='orderItems', on_delete=models.CASCADE, null=True, blank=True)
     quantity = models.IntegerField(default=0, null=True, blank=True)
     date_added = models.DateTimeField(null=True)
@@ -160,11 +160,12 @@ class ShippingAddress(models.Model):
         return self.full_address
 
 class Review(models.Model):
-    customer = models.ForeignKey(Customer, on_delete=models.CASCADE)
+    customer = models.ForeignKey(Customer, related_name='customer', on_delete=models.CASCADE)
     product = models.ForeignKey(Product, related_name='reviews', on_delete=models.CASCADE)
     stars = models.IntegerField(null=True, blank=True, validators=[MinValueValidator(1), MaxValueValidator(5)])
     comment = models.TextField(blank=True, null=True)
     date_added = models.DateTimeField(default=timezone.now)
+    approval_status = models.BooleanField()
 
     def __str__(self):
         return str(self.id)

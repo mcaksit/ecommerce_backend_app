@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PDF Output</title>
+
+    <style>
+        @page {
+            size: "A4";
+            margin: 2.5cm 1.5cm 3.5cm 1.5cm;
+
+            @top-center {
+                white-space: pre-line;
+                content: "TECHSCAPE - Invoice Report between '{{dates.0}}' and '{{dates.1}}' ";
+            }
+
+            @bottom-right {
+                content: "Page "counter(page) " of  "counter(pages);
+            }
+        }
+        
+        .invoice{
+            border: 1px solid black;
+            margin: 0.5cm;
+            padding: 0.5cm;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h2>Invoice List</h2>
+
+    <div>
+        <table class="table">
+            <thead class="thead">
+                <tr>
+                    <th>Transaction ID</th>
+                    <th>Customer</th>
+                    <th>Product</th>
+                    <th>Date</th>
+                    <th>Quantity</th>
+                    <th>Product Price</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in invoices %}
+                <tr>
+                    <td>{{item.order.transaction_id}}</td>
+                    <td>{{item.order.customer}}</td>
+                    <td>{{item.product}}</td>
+                    <td>{{item.date_added}}</td>
+                    <td>{{item.quantity}}</td>
+                    <td>{{item.product.price}}</td>
+                </tr>
+                {% endfor %}
+
+            </tbody>
+        </table>
+    </div>
+    {% for item in invoices %}
+    <div class="invoice">
+        <div ></div>
+        Transaction ID: {{item.order.transaction_id}}
+        Customer: {{item.order.customer}}
+        <p>Product: {{item.product}}</p>
+        <p>Date: {{item.date_added}}</p>
+        <p>Quantity: {{item.quantity}}</p>
+        <p>Price/Product: {{item.product.price}}</p>
+    </div>
+    
+    {% endfor %}
+</body>
+
+</html>
