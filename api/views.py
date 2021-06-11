@@ -492,6 +492,7 @@ class AddToCart(APIView):
             cartItem2, created = CartItem.objects.get_or_create(cart=cart, product=product, defaults={'quantity': serializer.data.get("quantity")})
             if (created == False):
                 cartItem2.quantity = cartItem2.quantity + serializer.data.get("quantity")
+                
             if (product.stock - cartItem.get("quantity") >= 0):
                 product.stock = product.stock - cartItem.get("quantity")
                 product.save()
@@ -586,7 +587,6 @@ class MakeReview(APIView):
         except:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
-
 class UserCheckout(APIView):
     authentication_classes = [authentication.TokenAuthentication]
     permission_classes = [permissions.IsAuthenticated]
@@ -615,7 +615,6 @@ class UserCheckout(APIView):
             cartItems[i].delete()
 
         return Response(status=status.HTTP_200_OK)
-
 
 class ExportPDF(APIView):
     authentication_classes=[authentication.TokenAuthentication]
@@ -750,10 +749,15 @@ class RequestRefund(APIView):
     def get(self,request,pk):
         try:
             order_item = Order_v2.Objects.get(id=pk)
-            if(order_item.Status == "Completed"):
-                order_item.Status = "Customer requests refund"
-                order_item.save()
-            else:
-                return Response("Item Cannot be refunded",status=status.HTTP_400_BAD_REQUEST)
+            if(datetime.datetime.now()-order_item.date_added() > datetime.timedelta(days=30)):                    
+                if(order_item.Status == "Completed"):
+                    order_item.Status = "Customer requests refund"
+                    order_item.save()
+                else:
+                    return Response("Item Cannot be refunded",status=status.HTTP_400_BAD_REQUEST)
         except Order_v2.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
+
+        return Response(status=status.HTTP_200_OK)
+
+class 
