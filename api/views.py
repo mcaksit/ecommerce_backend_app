@@ -23,6 +23,7 @@ from .serializers import *
 def apiOverview(request):
     api_urls = {
         'User Login':'user-login/',
+        'Check if User is Admin':'check-user-admin/',
         'User Logout':'user-logout/',
         'User Create':'user-create/',
         'User Update':'user-update/<str:pk>/',
@@ -56,6 +57,9 @@ def apiOverview(request):
         'List Orders':'order-list/',
         'Update Order':'order-update/<int:pk>/',
         'Approve Review':'review-approval/<int:pk>/',
+        'Order Detail':'order-detail/<int:pk>/',
+        'Make Refund':'make-refund/<int:pk>/',
+        'Request Refund':'request-refund/<int:pk>/',
     }
     return Response(api_urls)
 
@@ -734,7 +738,7 @@ class MakeRefund(APIView):
 
     def get(self,request,pk):
         try:
-            order_item = Order_v2.Objects.get(id=pk)
+            order_item = Order_v2.objects.get(id=pk)
             order_item.Status = "Refunded"
             order_item.save()
         except Order_v2.DoesNotExist:
@@ -748,16 +752,45 @@ class RequestRefund(APIView):
 
     def get(self,request,pk):
         try:
-            order_item = Order_v2.Objects.get(id=pk)
-            if(datetime.datetime.now()-order_item.date_added() > datetime.timedelta(days=30)):                    
-                if(order_item.Status == "Completed"):
-                    order_item.Status = "Customer requests refund"
-                    order_item.save()
-                else:
-                    return Response("Item Cannot be refunded",status=status.HTTP_400_BAD_REQUEST)
+            order_item = Order_v2.objects.get(id=pk)
+            #if(datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S")-order_item.date_ordered() > datetime.timedelta(days=30)):                    
+            if(order_item.Status == "Completed"):
+                order_item.Status = "Customer requests refund"
+                order_item.save()
+            else:
+                return Response("Item Cannot be refunded",status=status.HTTP_400_BAD_REQUEST)
         except Order_v2.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
+
+        return Response(status=status.HTTP_200_OK)
 
         #return Response(status=status.HTTP_200_OK)
 
 #class 
+
+class OrderDetail(APIView):
+    authentication_classes=[authentication.TokenAuthentication]
+    permission_classes=[permissions.IsAuthenticated]  
+    
+    def get(self, request, pk):
+        try:
+            order_item = Order_v2.objects.get(id=pk)
+        except Order_v2.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        serializer = OrderSerializer(order_item)
+        return Response(serializer.data,status=status.HTTP_200_OK)
+
+class CheckUserAdmin(APIView):
+    authentication_classes=[authentication.TokenAuthentication]
+    permission_classes=[permissions.IsAuthenticated]
+
+    def get(self,request):
+        try:
+            customersGroup = Group.objects.get(name='Customer')
+            if (request.user.groups.all()):
+                if (request.user.groups.all()[0] == customersGroup):
+                    return Response(status=status.HTTP_403_FORBIDDEN)
+                return Response(status=status.HTTP_200_OK)
+            return Response(status=status.HTTP_200_OK)
+        except User.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)

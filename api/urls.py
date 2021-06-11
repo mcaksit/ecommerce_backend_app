@@ -5,6 +5,7 @@ urlpatterns = [
     path('', views.apiOverview, name='api-overview'),
     #User api urls
     path('user-login/', views.TokenLogin.as_view()),
+    path('check-user-admin/', views.CheckUserAdmin.as_view()),
     path('user-logout/', views.TokenLogout.as_view()),
     path('user-create/', views.UserCreate, name='user-create'),
     path('user-update/<int:pk>/', views.UserUpdate.as_view()),
@@ -44,5 +45,7 @@ urlpatterns = [
     path('order-list/', views.OrderList.as_view()),
     path('order-update/<int:pk>/', views.OrderUpdate.as_view()),
     path('review-approval/<int:pk>/', views.ApproveReview.as_view()),
-    
+    path('order-detail/<int:pk>/', views.OrderDetail.as_view()),
+    path('make-refund/<int:pk>/', views.MakeRefund.as_view()),
+    path('request-refund/<int:pk>/', views.RequestRefund.as_view()),
 ]
