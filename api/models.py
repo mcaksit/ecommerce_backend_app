@@ -165,7 +165,7 @@ class Review(models.Model):
     stars = models.IntegerField(null=True, blank=True, validators=[MinValueValidator(1), MaxValueValidator(5)])
     comment = models.TextField(blank=True, null=True)
     date_added = models.DateTimeField(default=timezone.now)
-    approval_status = models.BooleanField()
+    approval_status = models.BooleanField(blank=True, null=True)
 
     def __str__(self):
         return str(self.id)
